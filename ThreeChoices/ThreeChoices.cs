@@ -36,8 +36,8 @@ namespace ThreeChoices
 
         public void Awake()
         {
-            Harmony harmony = new Harmony(GUID);
-            harmony.PatchAll();
+            Harmony Hook = new Harmony(GUID);
+            Hook.PatchAll();
         }
     }
 
