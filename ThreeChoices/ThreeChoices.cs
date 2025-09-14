@@ -15,8 +15,8 @@ namespace ThreeChoices
         public static uint changeFrom = 2u;
         public static uint changeTo = 3u;
 
-        public static readonly FieldInfo RelicTool = AccessTools.Field(typeof(RelicDraftRewardData), "draftOptionsCount");
-        public static readonly FieldInfo DraftTool = AccessTools.Field(typeof(DraftRewardData), "draftOptionsCount");
+        private static readonly FieldInfo RelicTool = AccessTools.Field(typeof(RelicDraftRewardData), "draftOptionsCount");
+        private static readonly FieldInfo DraftTool = AccessTools.Field(typeof(DraftRewardData), "draftOptionsCount");
 
         public static void UpdateHerzalHoard(RelicDraftRewardData target)
         {
@@ -44,27 +44,18 @@ namespace ThreeChoices
     [HarmonyPatch(typeof(RelicDraftRewardData), "GatherPregeneratedRelics")]
     internal class RelicDraftRewardData_GatherPregeneratedRelics_Patch
     {
-        internal static void Prefix(RelicDraftRewardData __instance)
-        {
-            ThreeChoices.UpdateHerzalHoard(__instance);
-        }
+        internal static void Prefix(RelicDraftRewardData __instance) => ThreeChoices.UpdateHerzalHoard(__instance);
     }
 
     [HarmonyPatch(typeof(RelicDraftRewardData), "GetRelicsFromClasses")]
     internal class RelicDraftRewardData_GetRelicsFromClasses_Patch
     {
-        internal static void Prefix(RelicDraftRewardData __instance)
-        {
-            ThreeChoices.UpdateHerzalHoard(__instance);
-        }
+        internal static void Prefix(RelicDraftRewardData __instance) => ThreeChoices.UpdateHerzalHoard(__instance);
     }
 
     [HarmonyPatch(typeof(DraftRewardData), "GetCardsFromClasses")]
     internal class DraftRewardData_GetCardsFromClasses_Patch
     {
-        internal static void Prefix(DraftRewardData __instance)
-        {
-            ThreeChoices.UpdateBanner(__instance);
-        }
+        internal static void Prefix(DraftRewardData __instance) => ThreeChoices.UpdateBanner(__instance);
     }
 }
