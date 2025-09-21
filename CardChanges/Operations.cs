@@ -7,7 +7,7 @@ namespace CardChanges
 {
     public class DataManager : IClient
     {
-        private readonly IDictionary<Type, (bool, IProvider)> ProviderDictionary = new Dictionary<Type, (bool, IProvider)>(3);
+        private readonly IDictionary<Type, (bool, IProvider)> ProviderDictionary = new Dictionary<Type, (bool, IProvider)>();
 
         public SaveManager GameData => TryGetProvider<SaveManager>();
 
@@ -15,22 +15,13 @@ namespace CardChanges
 
         public CardStatistics CardStatistics => TryGetProvider<CardStatistics>();
 
-        public T TryGetProvider<T>() where T : IProvider
-        {
-            return (T)ProviderDictionary[typeof(T)].Item2;
-        }
+        public T TryGetProvider<T>() where T : IProvider => (T)ProviderDictionary[typeof(T)].Item2;
 
         public void NewProviderAvailable(IProvider Provider)
         {
             Type ProviderType = Provider.GetType();
-            if (ProviderDictionary.ContainsKey(ProviderType))
-            {
-                ProviderDictionary[ProviderType] = (false, Provider);
-            }
-            else
-            {
-                ProviderDictionary.Add(ProviderType, (false, Provider));
-            }
+            if (ProviderDictionary.ContainsKey(ProviderType)) ProviderDictionary[ProviderType] = (false, Provider);
+            else ProviderDictionary.Add(ProviderType, (false, Provider));
         }
 
         public void NewProviderFullyInstalled(IProvider Provider)
@@ -43,21 +34,21 @@ namespace CardChanges
         public void ProviderRemoved(IProvider Provider) => ProviderDictionary.Remove(Provider.GetType());
     }
 
-    public static class ModData
+    public static class Mod
     {
-        private static readonly AllGameData _Data = null;
+        private static readonly AllGameData _Data;
         public static AllGameData Data => _Data;
 
-        static ModData() => _Data = CardChanges.ModDataManager.GameData.GetAllGameData();
+        static Mod() => _Data = CardChanges.ModDataManager.GameData.GetAllGameData();
 
-        public static ReworkCardObject ModCard(string cardID)
-            => new ReworkCardObject(cardID, Data.FindCardData(cardID));
+        public static ModCardData Card(Cards card)
+        {
+            string CardID = card.ID();
+            return new ModCardData(CardID, Data.FindCardData(CardID));
+        }
 
-        public static ReworkCardObject ModCard(Cards card)
-            => ModCard(card.ID());
-
-        public static ReworkUpgradeObject ModUpgrade(string upgradeID)
-            => new ReworkUpgradeObject(upgradeID, Data.FindCardUpgradeData(upgradeID));
+        public static ModCardUpgradeData Upgrade(string upgradeID)
+            => new ModCardUpgradeData(upgradeID, Data.FindCardUpgradeData(upgradeID));
 
         public static List<CardTraitData> TraitList(params CardTraitData[] traits)
         {
@@ -78,11 +69,21 @@ namespace CardChanges
         public static StatusEffectStackData[] StatusArray(StatusEffect status, int stacks = 1)
             => StatusArray((status, stacks));
 
+        public static List<StatusEffectStackData> StatusList(params (StatusEffect, int)[] statuses)
+        {
+            var StatusList = new List<StatusEffectStackData>(statuses.Length);
+            foreach ((StatusEffect, int) status in statuses) StatusList.Add(Status(status.Item1, status.Item2));
+            return StatusList;
+        }
+
+        public static List<StatusEffectStackData> StatusList(StatusEffect status, int stacks = 1)
+            => StatusList((status, stacks));
+
         public static StatusEffectStackData Status(StatusEffect status, int stacks = 1)
             => new StatusEffectStackData { statusId = status.ID(), count = stacks };
     }
 
-    public abstract class ReworkObject<Type> where Type : GameData
+    public abstract class ModGameData<Type> where Type : GameData
     {
         private readonly string _ID;
         public string ID => _ID;
@@ -90,7 +91,7 @@ namespace CardChanges
         private readonly Type _Data;
         public Type Data => _Data;
 
-        private Traverse _Traversing = null;
+        private Traverse _Traversing;
         public Traverse Traversing
         {
             get
@@ -100,7 +101,7 @@ namespace CardChanges
             }
         }
 
-        protected ReworkObject(string objectID, Type objectData)
+        protected ModGameData(string objectID, Type objectData)
         {
             _ID = objectID;
             _Data = objectData;
@@ -108,27 +109,26 @@ namespace CardChanges
 
         public virtual void SetField<fieldtype>(string fieldname, fieldtype value)
         {
-            Traverse field = Traversing.Field(fieldname);
-
+            var field = Traversing.Field(fieldname);
             if (field.GetValueType() == typeof(fieldtype)) field.SetValue(value);
             else Logging.LogWarning($"Attempted SetField on {fieldname} but mismatched type: {field.GetValueType()} vs. {typeof(fieldtype)}.");
         }
     }
 
-    public class ReworkCardObject : ReworkObject<CardData>
+    public class ModCardData : ModGameData<CardData>
     {
         private readonly CardType _Type;
         public CardType Type => _Type;
 
-        private readonly ReworkMonsterObject _Monster;
-        public ReworkMonsterObject Monster => _Monster;
+        private readonly ModCharacterData _Monster;
+        public ModCharacterData Monster => _Monster;
 
-        public ReworkCardObject(string cardID, CardData cardData) : base(cardID, cardData)
+        public ModCardData(string cardID, CardData cardData) : base(cardID, cardData)
         {
             if (!(Data is null))
             {
                 _Type = Data.GetCardType();
-                if (Type == CardType.Monster) _Monster = new ReworkMonsterObject(Data.GetSpawnCharacterData());
+                if (Type == CardType.Monster) _Monster = new ModCharacterData(Data.GetSpawnCharacterData());
             }
             else
             {
@@ -138,63 +138,69 @@ namespace CardChanges
 
         public void SetCost(int newCost)
         {
-            if (newCost >= 0) Traversing.Field("cost").SetValue(newCost);
-            else Traversing.Field("cost").SetValue(0);
+            if (newCost < 0) newCost = 0;
+            SetField("cost", newCost);
         }
 
         public void SetDescription(string en, string fr = "", string de = "", string ru = "", string pt = "", string zh = "")
         {
-            ModLocalization.AddLocalization(key: $"mod_card_description_{ID}", en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Traversing.Field("overrideDescriptionKey").SetValue($"mod_card_description_{ID}");
+            string DescriptionKey = $"mod_card_description_{ID}";
+            ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
+            SetField("overrideDescriptionKey", DescriptionKey);
         }
     }
 
-    public class ReworkMonsterObject : ReworkObject<CharacterData>
+    public class ModCharacterData : ModGameData<CharacterData>
     {
-        public ReworkMonsterObject(CharacterData monsterData) : base(monsterData.GetID(), monsterData)
+        public ModCharacterData(CharacterData monsterData) : base(monsterData.GetID(), monsterData)
         {
             if (Data is null) Logging.LogError($"Couldn't find monster: {ID} - This will cause crashes.");
         }
 
-        public void SetDamage(int newDamage) => Traversing.Field("attackDamage").SetValue(newDamage);
+        public void SetDamage(int newDamage) => SetField("attackDamage", newDamage);
 
-        public void SetHP(int newHP) => Traversing.Field("health").SetValue(newHP);
+        public void SetHP(int newHP) => SetField("health", newHP);
 
-        public void ReplaceStartingStatusEffects(StatusEffectStackData[] data) => Traversing.Field("startingStatusEffects").SetValue(data);
+        public void ReplaceStartingStatusEffects(StatusEffectStackData[] data) => SetField("startingStatusEffects", data);
 
-        public void ReplaceStartingStatusEffects(StatusEffect status, int stacks = 1) => ReplaceStartingStatusEffects(ModData.StatusArray(status, stacks));
+        public void ReplaceStartingStatusEffects(StatusEffect status, int stacks = 1) => ReplaceStartingStatusEffects(Mod.StatusArray(status, stacks));
 
         public void SetTriggerDescription(CharacterTriggerData.Trigger trigger, string en, string fr = "", string de = "", string ru = "", string pt = "", string zh = "")
         {
-            ModLocalization.AddLocalization(key: $"mod_unit_trigger_{ID}", en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Traverse.Create(Data.GetTriggers().FirstOrDefault(t => t.GetTrigger() == trigger)).Field("descriptionKey").SetValue($"mod_unit_trigger_{ID}");
+            string DescriptionKey = $"mod_unit_trigger_{ID}";
+            ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
+            Traverse.Create(Data.GetTriggers().FirstOrDefault(t => t.GetTrigger() == trigger)).Field("descriptionKey").SetValue(DescriptionKey);
         }
     }
 
-    public class ReworkUpgradeObject : ReworkObject<CardUpgradeData>
+    public class ModCardUpgradeData : ModGameData<CardUpgradeData>
     {
-        public ReworkUpgradeObject(string upgradeID, CardUpgradeData cardUpgradeData) : base(upgradeID, cardUpgradeData)
+        public ModCardUpgradeData(string upgradeID, CardUpgradeData cardUpgradeData) : base(upgradeID, cardUpgradeData)
         {
             if (Data is null) Logging.LogWarning($"Couldn't find upgrade: {ID} - This will cause crashes.");
         }
 
-        public void SetBonusDamage(int value) => Traversing.Field("bonusDamage").SetValue(value);
+        public void SetBonusDamage(int value) => SetField("bonusDamage", value);
 
-        public void SetBonusHP(int value) => Traversing.Field("bonusHP").SetValue(value);
+        public void SetBonusHP(int value) => SetField("bonusHP", value);
 
         public StatusEffectStackData GetStatusEffectUpgrade(StatusEffect status = StatusEffect.None)
             => Data.GetStatusEffectUpgrades().FirstOrDefault(t => status == StatusEffect.None || t.statusId == status.ID());
 
+        public void ReplaceStatusEffectUpgrades(List<StatusEffectStackData> data) => SetField("statusEffectUpgrades", data);
+
         public void SetUpgradeDescription(string en, string fr = "", string de = "", string ru = "", string pt = "", string zh = "")
         {
-            ModLocalization.AddLocalization(key: $"mod_upgrade_{ID}", en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Traversing.Field("upgradeDescriptionKey").SetValue($"mod_upgrade_{ID}");
+            string DescriptionKey = $"mod_upgrade_{ID}";
+            ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
+            SetField("upgradeDescriptionKey", DescriptionKey);
         }
 
         public void SetTriggerDescription(CharacterTriggerData.Trigger trigger, string en, string fr = "", string de = "", string ru = "", string pt = "", string zh = "")
         {
-            ModLocalization.AddLocalization(key: $"mod_upgrade_trigger_{ID}", en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Traverse.Create(Data.GetCharacterTriggerUpgrades().FirstOrDefault(t => t.GetTrigger() == trigger)).Field("descriptionKey").SetValue($"mod_upgrade_trigger_{ID}");
+            string DescriptionKey = $"mod_upgrade_trigger_{ID}";
+            ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
+            Traverse.Create(Data.GetCharacterTriggerUpgrades().FirstOrDefault(t => t.GetTrigger() == trigger)).Field("descriptionKey").SetValue(DescriptionKey);
         }
     }
 }
