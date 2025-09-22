@@ -42,22 +42,42 @@ namespace CardChanges
         static Mod() => _Data = CardChanges.ModDataManager.GameData.GetAllGameData();
 
         public static ModCardData Card(Cards card)
+            => new ModCardData(Data.FindCardData(card.ID()));
+
+        public static ModCardData Card(CardData card)
+            => new ModCardData(card);
+
+        public static ModCharacterData Monster(CharacterData data)
+            => new ModCharacterData(data);
+
+        public static ModCharacterData Monster(CardData card)
         {
-            string CardID = card.ID();
-            return new ModCardData(CardID, Data.FindCardData(CardID));
+            if (card.GetCardType() != CardType.Monster) Logging.LogError("Monster constructor called for a non-Monster Card");
+            return new ModCharacterData(card.GetSpawnCharacterData());
+        }
+
+        public static ModCharacterData Monster(ModCardData modcard)
+        {
+            if (modcard.Type != CardType.Monster) Logging.LogError("Monster constructor called for a non-Monster Card");
+            return new ModCharacterData(modcard.Data.GetSpawnCharacterData());
         }
 
         public static ModCardUpgradeData Upgrade(string upgradeID)
-            => new ModCardUpgradeData(upgradeID, Data.FindCardUpgradeData(upgradeID));
+            => new ModCardUpgradeData(Data.FindCardUpgradeData(upgradeID));
 
         public static List<CardTraitData> TraitList(params CardTraitData[] traits)
         {
             var TraitList = new List<CardTraitData>(traits.Length);
-            foreach (CardTraitData trait in traits) TraitList.Add(Trait(trait.traitStateName));
+            foreach (CardTraitData trait in traits) TraitList.Add(trait);
             return TraitList;
         }
 
-        public static CardTraitData Trait(string traitname) => new CardTraitData { traitStateName = traitname };
+        public static CardTraitData Trait(string traitname, int paramint = 0)
+        {
+            var Trait = new CardTraitData { traitStateName = traitname };
+            Trait.SetParamInt(paramint);
+            return Trait;
+        }
 
         public static StatusEffectStackData[] StatusArray(params (StatusEffect, int)[] statuses)
         {
@@ -101,9 +121,9 @@ namespace CardChanges
             }
         }
 
-        protected ModGameData(string objectID, Type objectData)
+        protected ModGameData(Type objectData)
         {
-            _ID = objectID;
+            _ID = objectData.GetID();
             _Data = objectData;
         }
 
@@ -123,16 +143,13 @@ namespace CardChanges
         private readonly ModCharacterData _Monster;
         public ModCharacterData Monster => _Monster;
 
-        public ModCardData(string cardID, CardData cardData) : base(cardID, cardData)
+        public ModCardData(CardData cardData) : base(cardData)
         {
-            if (!(Data is null))
-            {
-                _Type = Data.GetCardType();
-                if (Type == CardType.Monster) _Monster = new ModCharacterData(Data.GetSpawnCharacterData());
-            }
+            if (Data is null) Logging.LogError("Couldn't find card - This will cause crashes.");
             else
             {
-                Logging.LogError($"Couldn't find card: {ID} - This will cause crashes.");
+                _Type = Data.GetCardType();
+                if (Type == CardType.Monster) _Monster = Mod.Monster(Data.GetSpawnCharacterData());
             }
         }
 
@@ -152,9 +169,9 @@ namespace CardChanges
 
     public class ModCharacterData : ModGameData<CharacterData>
     {
-        public ModCharacterData(CharacterData monsterData) : base(monsterData.GetID(), monsterData)
+        public ModCharacterData(CharacterData monsterData) : base(monsterData)
         {
-            if (Data is null) Logging.LogError($"Couldn't find monster: {ID} - This will cause crashes.");
+            if (Data is null) Logging.LogError("Couldn't find monster - This will cause crashes.");
         }
 
         public void SetDamage(int newDamage) => SetField("attackDamage", newDamage);
@@ -175,17 +192,17 @@ namespace CardChanges
 
     public class ModCardUpgradeData : ModGameData<CardUpgradeData>
     {
-        public ModCardUpgradeData(string upgradeID, CardUpgradeData cardUpgradeData) : base(upgradeID, cardUpgradeData)
+        public ModCardUpgradeData(CardUpgradeData upgradeData) : base(upgradeData)
         {
-            if (Data is null) Logging.LogWarning($"Couldn't find upgrade: {ID} - This will cause crashes.");
+            if (Data is null) Logging.LogWarning("Couldn't find upgrade - This will cause crashes.");
         }
 
         public void SetBonusDamage(int value) => SetField("bonusDamage", value);
 
         public void SetBonusHP(int value) => SetField("bonusHP", value);
 
-        public StatusEffectStackData GetStatusEffectUpgrade(StatusEffect status = StatusEffect.None)
-            => Data.GetStatusEffectUpgrades().FirstOrDefault(t => status == StatusEffect.None || t.statusId == status.ID());
+        public StatusEffectStackData GetStatusEffectUpgrade(StatusEffect status)
+            => Data.GetStatusEffectUpgrades().FirstOrDefault(t => t.statusId == status.ID());
 
         public void ReplaceStatusEffectUpgrades(List<StatusEffectStackData> data) => SetField("statusEffectUpgrades", data);
 
