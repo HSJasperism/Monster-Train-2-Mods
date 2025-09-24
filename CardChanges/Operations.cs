@@ -52,14 +52,28 @@ namespace CardChanges
 
         public static ModCharacterData Monster(CardData card)
         {
-            if (card.GetCardType() != CardType.Monster) Logging.LogError("Monster constructor called for a non-Monster Card");
-            return new ModCharacterData(card.GetSpawnCharacterData());
+            if (card.GetCardType() != CardType.Monster)
+            {
+                Logging.LogError("Monster constructor called for a non-Monster Card");
+                return null;
+            }
+            else
+            {
+                return new ModCharacterData(card.GetSpawnCharacterData());
+            }
         }
 
         public static ModCharacterData Monster(ModCardData modcard)
         {
-            if (modcard.Type != CardType.Monster) Logging.LogError("Monster constructor called for a non-Monster Card");
-            return new ModCharacterData(modcard.Data.GetSpawnCharacterData());
+            if (modcard.Type != CardType.Monster)
+            {
+                Logging.LogError("Monster constructor called for a non-Monster Card");
+                return null;
+            }
+            else
+            {
+                return modcard.Monster;
+            }
         }
 
         public static ModCardUpgradeData Upgrade(string upgradeID)
