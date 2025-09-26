@@ -42,7 +42,7 @@ namespace CardChanges
         static Mod() => _Data = CardChanges.ModDataManager.GameData.GetAllGameData();
 
         public static ModCardData Card(Cards card)
-            => new ModCardData(Data.FindCardData(card.ID()));
+            => new ModCardData(Data.FindCardData(card.GetID()));
 
         public static ModCardData Card(CardData card)
             => new ModCardData(card);
@@ -76,20 +76,30 @@ namespace CardChanges
             }
         }
 
-        public static ModCardUpgradeData Upgrade(string upgradeID)
-            => new ModCardUpgradeData(Data.FindCardUpgradeData(upgradeID));
+        public static ModCardUpgradeData Upgrade(Upgrades upgrade)
+            => new ModCardUpgradeData(Data.FindCardUpgradeData(upgrade.GetID()));
 
-        public static List<CardTraitData> TraitList(params CardTraitData[] traits)
-        {
-            var TraitList = new List<CardTraitData>(traits.Length);
-            foreach (CardTraitData trait in traits) TraitList.Add(trait);
-            return TraitList;
-        }
+        public static List<CardTraitData> TraitList(params CardTraitData[] traits) => traits.ToList();
 
-        public static CardTraitData Trait(string traitname, int paramint = 0)
+        public static CardTraitData Trait(CardTrait trait,
+                                          float paramfloat = 0,
+                                          int paramint = 0,
+                                          string paramstr = "",
+                                          string paramsubtype = "SubtypesData_None",
+                                          string paramdesc = "",
+                                          Team.Type paramteamtype = Team.Type.None,
+                                          StatusEffectStackData[] paramstatuseffects = null)
         {
-            var Trait = new CardTraitData { traitStateName = traitname };
-            Trait.SetParamInt(paramint);
+            var Trait = new CardTraitData { traitStateName = trait.GetID() };
+            var TraverseTrait = Traverse.Create(Trait);
+            TraverseTrait.Field("paramFloat").SetValue(paramfloat);
+            TraverseTrait.Field("paramInt").SetValue(paramint);
+            TraverseTrait.Field("paramStr").SetValue(paramstr);
+            TraverseTrait.Field("paramDescription").SetValue(paramdesc);
+            TraverseTrait.Field("paramTeamType").SetValue(paramteamtype);
+            TraverseTrait.Field("paramSubtype").SetValue(paramsubtype);
+            if (paramstatuseffects is null) TraverseTrait.Field("paramStatusEffects").SetValue(new StatusEffectStackData[0]);
+            else TraverseTrait.Field("paramStatusEffects").SetValue(paramstatuseffects);
             return Trait;
         }
 
@@ -114,7 +124,7 @@ namespace CardChanges
             => StatusList((status, stacks));
 
         public static StatusEffectStackData Status(StatusEffect status, int stacks = 1)
-            => new StatusEffectStackData { statusId = status.ID(), count = stacks };
+            => new StatusEffectStackData { statusId = status.GetID(), count = stacks };
     }
 
     public abstract class ModGameData<Type> where Type : GameData
@@ -173,7 +183,19 @@ namespace CardChanges
             SetField("cost", newCost);
         }
 
-        public void SetDescription(string en, string fr = "", string de = "", string ru = "", string pt = "", string zh = "")
+        public void AddTraits(params CardTraitData[] cardTraits)
+        {
+            List<CardTraitData> currentTraits = Data.GetTraits();
+            if (currentTraits is null) SetField("traits", Mod.TraitList(cardTraits));
+            else currentTraits.AddRange(cardTraits);
+        }
+
+        public void SetDescription(string en,
+                                   string fr = "",
+                                   string de = "",
+                                   string ru = "",
+                                   string pt = "",
+                                   string zh = "")
         {
             string DescriptionKey = $"mod_card_description_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
@@ -192,11 +214,26 @@ namespace CardChanges
 
         public void SetHP(int newHP) => SetField("health", newHP);
 
-        public void ReplaceStartingStatusEffects(StatusEffectStackData[] data) => SetField("startingStatusEffects", data);
+        public void AddStartingStatusEffects(params StatusEffectStackData[] data)
+        {
+            StatusEffectStackData[] StartingStatuses = Data.GetStartingStatusEffects();
+            if (StartingStatuses is null || StartingStatuses.Length == 0) SetField("startingStatusEffects", data);
+            else
+            {
+                StatusEffectStackData[] newArray = new StatusEffectStackData[StartingStatuses.Length + data.Length];
+                StartingStatuses.CopyTo(newArray, 0);
+                data.CopyTo(newArray, StartingStatuses.Length);
+                SetField("startingStatusEffects", newArray);
+            }
+        }
 
-        public void ReplaceStartingStatusEffects(StatusEffect status, int stacks = 1) => ReplaceStartingStatusEffects(Mod.StatusArray(status, stacks));
-
-        public void SetTriggerDescription(CharacterTriggerData.Trigger trigger, string en, string fr = "", string de = "", string ru = "", string pt = "", string zh = "")
+        public void SetTriggerDescription(CharacterTriggerData.Trigger trigger,
+                                          string en,
+                                          string fr = "",
+                                          string de = "",
+                                          string ru = "",
+                                          string pt = "",
+                                          string zh = "")
         {
             string DescriptionKey = $"mod_unit_trigger_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
@@ -216,18 +253,29 @@ namespace CardChanges
         public void SetBonusHP(int value) => SetField("bonusHP", value);
 
         public StatusEffectStackData GetStatusEffectUpgrade(StatusEffect status)
-            => Data.GetStatusEffectUpgrades().FirstOrDefault(t => t.statusId == status.ID());
+            => Data.GetStatusEffectUpgrades().FirstOrDefault(t => t.statusId == status.GetID());
 
         public void ReplaceStatusEffectUpgrades(List<StatusEffectStackData> data) => SetField("statusEffectUpgrades", data);
 
-        public void SetUpgradeDescription(string en, string fr = "", string de = "", string ru = "", string pt = "", string zh = "")
+        public void SetUpgradeDescription(string en,
+                                          string fr = "",
+                                          string de = "",
+                                          string ru = "",
+                                          string pt = "",
+                                          string zh = "")
         {
             string DescriptionKey = $"mod_upgrade_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
             SetField("upgradeDescriptionKey", DescriptionKey);
         }
 
-        public void SetTriggerDescription(CharacterTriggerData.Trigger trigger, string en, string fr = "", string de = "", string ru = "", string pt = "", string zh = "")
+        public void SetTriggerDescription(CharacterTriggerData.Trigger trigger,
+                                          string en,
+                                          string fr = "",
+                                          string de = "",
+                                          string ru = "",
+                                          string pt = "",
+                                          string zh = "")
         {
             string DescriptionKey = $"mod_upgrade_trigger_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);

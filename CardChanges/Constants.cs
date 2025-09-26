@@ -75,6 +75,12 @@ namespace CardChanges
         Valor
     }
 
+    public enum CardTrait
+    {
+        None = 0,
+        Piercing
+    }
+
     public enum Cards
     {
         None = 0,
@@ -592,9 +598,23 @@ namespace CardChanges
         ZoneofSilence
     }
 
+    public enum Upgrades
+    {
+        None = 0,
+        Brawler1,
+        Brawler2,
+        Brawler3,
+        Reaper1,
+        Reaper2,
+        Reaper3,
+        Wrathful1,
+        Wrathful2,
+        Wrathful3,
+    }
+
     public static class EnumExtensions
     {
-        public static string ID(this StatusEffect value) => StatusEffectIDs[value];
+        public static string GetID(this StatusEffect value) => StatusEffectIDs[value];
         internal static Dictionary<StatusEffect, string> StatusEffectIDs = new Dictionary<StatusEffect, string>
         {
             { StatusEffect.None, null },
@@ -668,7 +688,14 @@ namespace CardChanges
             { StatusEffect.Valor, StatusEffectValor.StatusId }
         };
 
-        public static string ID(this Cards value) => CardIDs[value];
+        public static string GetID(this CardTrait value) => CardTraitIDs[value];
+        internal static Dictionary<CardTrait, string> CardTraitIDs = new Dictionary<CardTrait, string>
+        {
+            { CardTrait.None , null },
+            { CardTrait.Piercing, "CardTraitIgnoreArmor" }
+        };
+
+        public static string GetID(this Cards value) => CardIDs[value];
         internal static Dictionary<Cards, string> CardIDs = new Dictionary<Cards, string>
         {
             { Cards.None, null },
@@ -1184,6 +1211,20 @@ namespace CardChanges
             { Cards.WynghsSpirit, "b0462e15-6423-4fb8-9f58-2ae89b1d1a97" },
             { Cards.Zealot, "071d7448-0be6-4a40-860c-ede856a42228" },
             { Cards.ZoneofSilence, "56468ba5-86b6-49be-ba30-02baf7ffd6dd" }
+        };
+
+        public static string GetID(this Upgrades value) => UpgradeIDs[value];
+        internal static Dictionary<Upgrades, string> UpgradeIDs = new Dictionary<Upgrades, string>
+        {
+            { Upgrades.Brawler1, "6057fccd-90dc-4c97-b64b-cca5a02f4766" },
+            { Upgrades.Brawler2, "b1476ffd-d425-46d6-89d6-975921a8f58c" },
+            { Upgrades.Brawler3, "142535b6-ad20-4fa3-8a6b-4fff4ad45784" },
+            { Upgrades.Reaper1, "96f93f28-0d3c-4b62-aabc-f7de6b655995" },
+            { Upgrades.Reaper2, "86d92229-18f2-4644-8d01-08e195de9253" },
+            { Upgrades.Reaper3, "0bc77389-97b7-4073-b00e-111293e706a4" },
+            { Upgrades.Wrathful1, "bbedbbd7-cf93-4b27-920a-36815e404a9a" },
+            { Upgrades.Wrathful2, "71ca2e13-c5de-426d-997a-45d0f9e21a34" },
+            { Upgrades.Wrathful3, "93e65477-e418-4da8-b456-e3e3d9d269fa" }
         };
     }
 }
