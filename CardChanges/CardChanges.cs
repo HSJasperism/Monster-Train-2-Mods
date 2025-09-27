@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -15,9 +16,21 @@ namespace CardChanges
 
         public static DataManager ModDataManager;
 
-        public static void ChangeAssets()
+        public void Awake()
+        {
+            var Hook = new Harmony(GUID);
+            Hook.PatchAll();
+        }
+    }
+
+    [HarmonyPatch(typeof(AssetLoadingManager), "Start")]
+    public class PatchCardChanges
+    {
+        public static void Postfix()
         {
             var stopwatch = Stopwatch.StartNew();
+
+            CardChanges.ModDataManager ??= new DataManager();
 
             var PatchingTasks = new Task[]
             {
@@ -27,25 +40,10 @@ namespace CardChanges
                 Task.Run(() => Patches.UmbraReworks()),
                 Task.Run(() => Patches.MeltingRemnantReworks())
             };
-
             Task.WaitAll(PatchingTasks);
 
             stopwatch.Stop();
-            Logging.LogInfo($"Completed data patching for {GUID} in {stopwatch.ElapsedMilliseconds}ms.");
+            Logging.LogInfo($"Completed data patching for {CardChanges.GUID} in {stopwatch.ElapsedMilliseconds}ms.");
         }
-
-        public void Awake()
-        {
-            ModDataManager ??= new DataManager();
-            DepInjector.AddClient(ModDataManager);
-            var Hook = new Harmony(GUID);
-            Hook.PatchAll();
-        }
-    }
-
-    [HarmonyPatch(typeof(AssetLoadingManager), "Start")]
-    public class PatchCardChanges
-    {
-        public static void Postfix() => CardChanges.ChangeAssets();
     }
 }

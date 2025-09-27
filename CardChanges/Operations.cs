@@ -7,7 +7,13 @@ namespace CardChanges
 {
     public class DataManager : IClient
     {
-        private readonly IDictionary<Type, (bool, IProvider)> ProviderDictionary = new Dictionary<Type, (bool, IProvider)>();
+        public DataManager()
+        {
+            _ProviderDictionary = new Dictionary<Type, (bool, IProvider)>(DepInjector.ProviderCount);
+            DepInjector.AddClient(this);
+        }
+
+        private readonly IDictionary<Type, (bool, IProvider)> _ProviderDictionary;
 
         public SaveManager GameData => TryGetProvider<SaveManager>();
 
@@ -15,31 +21,36 @@ namespace CardChanges
 
         public CardStatistics CardStatistics => TryGetProvider<CardStatistics>();
 
-        public T TryGetProvider<T>() where T : IProvider => (T)ProviderDictionary[typeof(T)].Item2;
+        public T TryGetProvider<T>() where T : IProvider => (T)_ProviderDictionary[typeof(T)].Item2;
 
         public void NewProviderAvailable(IProvider Provider)
         {
             Type ProviderType = Provider.GetType();
-            if (ProviderDictionary.ContainsKey(ProviderType)) ProviderDictionary[ProviderType] = (false, Provider);
-            else ProviderDictionary.Add(ProviderType, (false, Provider));
+            if (_ProviderDictionary.ContainsKey(ProviderType)) _ProviderDictionary[ProviderType] = (false, Provider);
+            else _ProviderDictionary.Add(ProviderType, (false, Provider));
         }
 
         public void NewProviderFullyInstalled(IProvider Provider)
         {
             Type ProviderType = Provider.GetType();
-            if (ProviderDictionary.ContainsKey(ProviderType)) ProviderDictionary[ProviderType] = (true, Provider);
-            else ProviderDictionary.Add(ProviderType, (true, Provider));
+            if (_ProviderDictionary.ContainsKey(ProviderType)) _ProviderDictionary[ProviderType] = (true, Provider);
+            else _ProviderDictionary.Add(ProviderType, (true, Provider));
         }
 
-        public void ProviderRemoved(IProvider Provider) => ProviderDictionary.Remove(Provider.GetType());
+        public void ProviderRemoved(IProvider Provider) => _ProviderDictionary.Remove(Provider.GetType());
     }
 
     public static class Mod
     {
-        private static readonly AllGameData _Data;
-        public static AllGameData Data => _Data;
-
-        static Mod() => _Data = CardChanges.ModDataManager.GameData.GetAllGameData();
+        private static AllGameData _Data;
+        public static AllGameData Data
+        {
+            get
+            {
+                _Data ??= CardChanges.ModDataManager.GameData.GetAllGameData();
+                return _Data;
+            }
+        }
 
         public static ModCardData Card(Cards card)
             => new ModCardData(Data.FindCardData(card.GetID()));
@@ -149,6 +160,13 @@ namespace CardChanges
         {
             _ID = objectData.GetID();
             _Data = objectData;
+        }
+
+        public virtual fieldtype GetField<fieldtype>(string fieldname)
+        {
+            var thisField = Traversing.Field(fieldname);
+            if (thisField.GetValueType() == typeof(fieldtype)) return Traversing.Field(fieldname).GetValue<fieldtype>();
+            else return default;
         }
 
         public virtual void SetField<fieldtype>(string fieldname, fieldtype value)

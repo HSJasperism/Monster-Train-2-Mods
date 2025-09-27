@@ -1,4 +1,6 @@
-﻿namespace CardChanges
+﻿using System.Linq;
+
+namespace CardChanges
 {
     public static class Patches
     {
@@ -92,6 +94,23 @@
             var IcyCilophyte = Mod.Card(Cards.IcyCilophyte);
             IcyCilophyte.Monster.SetDamage(5);
             IcyCilophyte.Monster.SetHP(20);
+
+            var GuardoftheUnnamed = Mod.Card(Cards.GuardoftheUnnamed);
+            GuardoftheUnnamed.Monster.SetDamage(5);
+            GuardoftheUnnamed.Monster.SetHP(20);
+            GuardoftheUnnamed.Monster.AddStartingStatusEffects(Mod.Status(StatusEffect.Armor, 20));
+
+            var TitanSentry = Mod.Card(Cards.TitanSentry);
+            TitanSentry.Monster.SetDamage(5);
+            TitanSentry.Monster.SetHP(20);
+            TitanSentry.Monster.AddStartingStatusEffects(Mod.Status(StatusEffect.Armor, 20));
+            TitanSentry.Monster.Data.GetTriggers()
+                                    .FirstOrDefault()
+                                    .GetEffects()
+                                    .FirstOrDefault()
+                                    .GetParamStatusEffects()
+                                    .FirstOrDefault(t => t.statusId == StatusEffect.Frostbite.GetID())
+                                    .count = 9;
         }
 
         public static void UmbraReworks()
@@ -110,11 +129,23 @@
             Morselmaster.Monster.SetDamage(9);
             Morselmaster.Monster.SetHP(9);
 
+            var MorselMade = Mod.Card(Cards.MorselMade);
+            MorselMade.Monster.SetDamage(9);
+            MorselMade.Monster.SetHP(9);
+            var MorselMadeUpgrade = new ModCardUpgradeData(MorselMade.Monster.Data.GetTriggers()
+                                                                                  .FirstOrDefault(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnFeed)
+                                                                                  .GetEffects()
+                                                                                  .FirstOrDefault(t => !(t.GetParamCardUpgradeData() is null))
+                                                                                  .GetParamCardUpgradeData());
+            MorselMadeUpgrade.SetBonusDamage(9);
+            MorselMadeUpgrade.SetBonusHP(9);
+
             Mod.Card(Cards.Overgorger).Monster.SetHP(50);
 
             var Shadowsiege = Mod.Card(Cards.Shadowsiege);
             Shadowsiege.SetCost(0);
-            Shadowsiege.Monster.SetHP(200);
+            Shadowsiege.Monster.SetDamage(180);
+            Shadowsiege.Monster.SetHP(180);
             Shadowsiege.Monster.AddStartingStatusEffects(Mod.Status(StatusEffect.Emberdrain, 3));
         }
 
