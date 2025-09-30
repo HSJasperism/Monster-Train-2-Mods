@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <MT2Path>E:/SteamLibrary/steamapps/common/Monster Train 2/</MT2Path>
-    <BepInExPath>E:/Thunderstore Mod Manager/DataFolder/MonsterTrain2/profiles/Trainworks/BepInEx/</BepInExPath>
+    <BepInExPath>E:/Thunderstore Mod Manager/DataFolder/MonsterTrain2/profiles/Default/BepInEx/</BepInExPath>
     <OutputPath>$(BepInExPath)/plugins/Three Choices/</OutputPath>
   </PropertyGroup>
 
