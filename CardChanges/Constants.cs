@@ -78,6 +78,7 @@ namespace CardChanges
     public enum CardTrait
     {
         None = 0,
+        Attuned,
         Piercing
     }
 
@@ -692,6 +693,7 @@ namespace CardChanges
         internal static Dictionary<CardTrait, string> CardTraitIDs = new Dictionary<CardTrait, string>
         {
             { CardTrait.None , null },
+            { CardTrait.Attuned, "CardTraitStrongerMagicPower" },
             { CardTrait.Piercing, "CardTraitIgnoreArmor" }
         };
 
