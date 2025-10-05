@@ -7,13 +7,12 @@ namespace CardChanges
 {
     public class DataManager : IClient
     {
+        private readonly IDictionary<Type, IProvider> _ProviderDictionary;
         public DataManager()
         {
-            _ProviderDictionary = new Dictionary<Type, (bool, IProvider)>(DepInjector.ProviderCount);
+            _ProviderDictionary = new Dictionary<Type, IProvider>(DepInjector.ProviderCount);
             DepInjector.AddClient(this);
         }
-
-        private readonly IDictionary<Type, (bool, IProvider)> _ProviderDictionary;
 
         public SaveManager GameData => TryGetProvider<SaveManager>();
 
@@ -21,20 +20,20 @@ namespace CardChanges
 
         public CardStatistics CardStatistics => TryGetProvider<CardStatistics>();
 
-        public T TryGetProvider<T>() where T : IProvider => (T)_ProviderDictionary[typeof(T)].Item2;
+        public T TryGetProvider<T>() where T : IProvider => (T)_ProviderDictionary[typeof(T)];
 
         public void NewProviderAvailable(IProvider Provider)
         {
             Type ProviderType = Provider.GetType();
-            if (_ProviderDictionary.ContainsKey(ProviderType)) _ProviderDictionary[ProviderType] = (false, Provider);
-            else _ProviderDictionary.Add(ProviderType, (false, Provider));
+            if (_ProviderDictionary.ContainsKey(ProviderType)) Logging.LogWarning($"Duplicate Provider found: {Provider.GetType()}");
+            else _ProviderDictionary.Add(ProviderType, Provider);
         }
 
         public void NewProviderFullyInstalled(IProvider Provider)
         {
             Type ProviderType = Provider.GetType();
-            if (_ProviderDictionary.ContainsKey(ProviderType)) _ProviderDictionary[ProviderType] = (true, Provider);
-            else _ProviderDictionary.Add(ProviderType, (true, Provider));
+            if (_ProviderDictionary.ContainsKey(ProviderType)) Logging.LogInfo($"Provider active: {Provider.GetType()}");
+            else _ProviderDictionary.Add(ProviderType, Provider);
         }
 
         public void ProviderRemoved(IProvider Provider) => _ProviderDictionary.Remove(Provider.GetType());
@@ -55,51 +54,29 @@ namespace CardChanges
         public static ModCardData Card(Cards card)
             => new ModCardData(Data.FindCardData(card.GetID()));
 
-        public static ModCardData Card(CardData card)
-            => new ModCardData(card);
-
-        public static ModCharacterData Monster(CharacterData data)
-            => new ModCharacterData(data);
-
-        public static ModCharacterData Monster(CardData card)
-        {
-            if (card.GetCardType() != CardType.Monster)
-            {
-                Logging.LogError("Monster constructor called for a non-Monster Card");
-                return null;
-            }
-            else
-            {
-                return new ModCharacterData(card.GetSpawnCharacterData());
-            }
-        }
-
-        public static ModCharacterData Monster(ModCardData modcard)
-        {
-            if (modcard.Type != CardType.Monster)
-            {
-                Logging.LogError("Monster constructor called for a non-Monster Card");
-                return null;
-            }
-            else
-            {
-                return modcard.Monster;
-            }
-        }
-
         public static ModCardUpgradeData Upgrade(Upgrades upgrade)
             => new ModCardUpgradeData(Data.FindCardUpgradeData(upgrade.GetID()));
 
-        public static List<CardTraitData> TraitList(params CardTraitData[] traits) => traits.ToList();
+        public static ModCardUpgradeData ToModGameData(this CardUpgradeData upgrade)
+            => new ModCardUpgradeData(upgrade);
 
-        public static CardTraitData Trait(CardTrait trait,
-                                          float paramfloat = 0,
-                                          int paramint = 0,
-                                          string paramstr = "",
-                                          string paramsubtype = "SubtypesData_None",
-                                          string paramdesc = "",
-                                          Team.Type paramteamtype = Team.Type.None,
-                                          StatusEffectStackData[] paramstatuseffects = null)
+        public static Traverse Field(this CharacterTriggerData characterTriggerData, string field)
+            => Traverse.Create(characterTriggerData).Field(field);
+
+        public static Traverse Field(this CardEffectData cardEffectData, string field)
+            => Traverse.Create(cardEffectData).Field(field);
+
+        public static Traverse Field<T>(this T gameData, string field) where T : GameData
+            => Traverse.Create(gameData).Field(field);
+
+        public static CardTraitData Instance(this CardTrait trait,
+                                             float paramfloat = 0,
+                                             int paramint = 0,
+                                             string paramstr = "",
+                                             string paramsubtype = "SubtypesData_None",
+                                             string paramdesc = "",
+                                             Team.Type paramteamtype = Team.Type.None,
+                                             StatusEffectStackData[] paramstatuseffects = null)
         {
             var Trait = new CardTraitData { traitStateName = trait.GetID() };
             var TraverseTrait = Traverse.Create(Trait);
@@ -109,89 +86,69 @@ namespace CardChanges
             TraverseTrait.Field("paramDescription").SetValue(paramdesc);
             TraverseTrait.Field("paramTeamType").SetValue(paramteamtype);
             TraverseTrait.Field("paramSubtype").SetValue(paramsubtype);
-            if (paramstatuseffects is null) TraverseTrait.Field("paramStatusEffects").SetValue(new StatusEffectStackData[0]);
-            else TraverseTrait.Field("paramStatusEffects").SetValue(paramstatuseffects);
+            paramstatuseffects ??= new StatusEffectStackData[0];
+            TraverseTrait.Field("paramStatusEffects").SetValue(paramstatuseffects);
             return Trait;
         }
 
-        public static StatusEffectStackData[] StatusArray(params (StatusEffect, int)[] statuses)
-        {
-            var StatusArray = new StatusEffectStackData[statuses.Length];
-            for (int i = 0; i < statuses.Length; i++) StatusArray[i] = Status(statuses[i].Item1, statuses[i].Item2);
-            return StatusArray;
-        }
-
-        public static StatusEffectStackData[] StatusArray(StatusEffect status, int stacks = 1)
-            => StatusArray((status, stacks));
-
-        public static List<StatusEffectStackData> StatusList(params (StatusEffect, int)[] statuses)
-        {
-            var StatusList = new List<StatusEffectStackData>(statuses.Length);
-            foreach ((StatusEffect, int) status in statuses) StatusList.Add(Status(status.Item1, status.Item2));
-            return StatusList;
-        }
-
-        public static List<StatusEffectStackData> StatusList(StatusEffect status, int stacks = 1)
-            => StatusList((status, stacks));
-
-        public static StatusEffectStackData Status(StatusEffect status, int stacks = 1)
-            => new StatusEffectStackData { statusId = status.GetID(), count = stacks };
+        public static StatusEffectStackData Stack(this StatusEffect status, int stackCount = 1)
+            => new StatusEffectStackData { statusId = status.GetID(), count = stackCount };
     }
 
     public abstract class ModGameData<Type> where Type : GameData
     {
-        private readonly string _ID;
-        public string ID => _ID;
-
-        private readonly Type _Data;
-        public Type Data => _Data;
-
-        private Traverse _Traversing;
-        public Traverse Traversing
-        {
-            get
-            {
-                _Traversing ??= Traverse.Create(Data);
-                return _Traversing;
-            }
-        }
+        public readonly string name;
+        public readonly string ID;
+        public readonly Type Data;
 
         protected ModGameData(Type objectData)
         {
-            _ID = objectData.GetID();
-            _Data = objectData;
+            name = objectData.name;
+            ID = objectData.GetID();
+            Data = objectData;
         }
 
-        public virtual fieldtype GetField<fieldtype>(string fieldname)
+        private Traverse _DataReflection;
+        public Traverse DataReflection
         {
-            var thisField = Traversing.Field(fieldname);
-            if (thisField.GetValueType() == typeof(fieldtype)) return Traversing.Field(fieldname).GetValue<fieldtype>();
-            else return default;
+            get
+            {
+                _DataReflection ??= Traverse.Create(Data);
+                return _DataReflection;
+            }
         }
 
-        public virtual void SetField<fieldtype>(string fieldname, fieldtype value)
+        public virtual T GetField<T>(string fieldname)
         {
-            var field = Traversing.Field(fieldname);
-            if (field.GetValueType() == typeof(fieldtype)) field.SetValue(value);
-            else Logging.LogWarning($"Attempted SetField on {fieldname} but mismatched type: {field.GetValueType()} vs. {typeof(fieldtype)}.");
+            var thisField = DataReflection.Field(fieldname);
+            if (thisField.GetValueType() == typeof(T)) return DataReflection.Field(fieldname).GetValue<T>();
+            else
+            {
+                Logging.LogWarning($"Attempted GetField on {fieldname} but mismatched type: {thisField.GetValueType()} vs. {typeof(T)}.");
+                return default;
+            }
+        }
+
+        public virtual void SetField<T>(string fieldname, T value)
+        {
+            var thisField = DataReflection.Field(fieldname);
+            if (thisField.GetValueType() == typeof(T)) thisField.SetValue(value);
+            else Logging.LogWarning($"Attempted SetField on {fieldname} but mismatched type: {thisField.GetValueType()} vs. {typeof(T)}.");
         }
     }
 
     public class ModCardData : ModGameData<CardData>
     {
-        private readonly CardType _Type;
-        public CardType Type => _Type;
-
-        private readonly ModCharacterData _Monster;
-        public ModCharacterData Monster => _Monster;
+        public readonly CardType Type;
+        public readonly ModCharacterData Monster;
 
         public ModCardData(CardData cardData) : base(cardData)
         {
             if (Data is null) Logging.LogError("Couldn't find card - This will cause crashes.");
             else
             {
-                _Type = Data.GetCardType();
-                if (Type == CardType.Monster) _Monster = Mod.Monster(Data.GetSpawnCharacterData());
+                Type = Data.GetCardType();
+                if (Type == CardType.Monster) Monster = new ModCharacterData(Data.GetSpawnCharacterData());
             }
         }
 
@@ -204,8 +161,16 @@ namespace CardChanges
         public void AddTraits(params CardTraitData[] cardTraits)
         {
             List<CardTraitData> currentTraits = Data.GetTraits();
-            if (currentTraits is null) SetField("traits", Mod.TraitList(cardTraits));
+            if (currentTraits is null) SetField("traits", cardTraits.ToList());
             else currentTraits.AddRange(cardTraits);
+        }
+
+        public void SetDamage(int damage)
+        {
+            if (Type == CardType.Spell)
+            {
+                Data.GetEffects().FirstOrDefault(t => t.GetEffectStateName() == "CardEffectDamage").Field("paramInt").SetValue(damage);
+            }
         }
 
         public void SetDescription(string en,
@@ -235,10 +200,10 @@ namespace CardChanges
         public void AddStartingStatusEffects(params StatusEffectStackData[] data)
         {
             StatusEffectStackData[] StartingStatuses = Data.GetStartingStatusEffects();
-            if (StartingStatuses is null || StartingStatuses.Length == 0) SetField("startingStatusEffects", data);
+            if (StartingStatuses.IsNullOrEmpty()) SetField("startingStatusEffects", data);
             else
             {
-                StatusEffectStackData[] newArray = new StatusEffectStackData[StartingStatuses.Length + data.Length];
+                var newArray = new StatusEffectStackData[StartingStatuses.Length + data.Length];
                 StartingStatuses.CopyTo(newArray, 0);
                 data.CopyTo(newArray, StartingStatuses.Length);
                 SetField("startingStatusEffects", newArray);
@@ -255,7 +220,7 @@ namespace CardChanges
         {
             string DescriptionKey = $"mod_unit_trigger_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Traverse.Create(Data.GetTriggers().FirstOrDefault(t => t.GetTrigger() == trigger)).Field("descriptionKey").SetValue(DescriptionKey);
+            Data.GetTriggers().FirstOrDefault(t => t.GetTrigger() == trigger).Field("descriptionKey").SetValue(DescriptionKey);
         }
     }
 
@@ -273,7 +238,12 @@ namespace CardChanges
         public StatusEffectStackData GetStatusEffectUpgrade(StatusEffect status)
             => Data.GetStatusEffectUpgrades().FirstOrDefault(t => t.statusId == status.GetID());
 
-        public void ReplaceStatusEffectUpgrades(List<StatusEffectStackData> data) => SetField("statusEffectUpgrades", data);
+        public void AddStatusEffectUpgrades(params StatusEffectStackData[] data)
+        {
+            var currentStatusEffects = GetField<List<StatusEffectStackData>>("statusEffectUpgrades");
+            if (currentStatusEffects is null) SetField("statusEffectUpgrades", data.ToList());
+            else currentStatusEffects.AddRange(data);
+        }
 
         public void SetUpgradeDescription(string en,
                                           string fr = "",
@@ -297,7 +267,7 @@ namespace CardChanges
         {
             string DescriptionKey = $"mod_upgrade_trigger_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Traverse.Create(Data.GetCharacterTriggerUpgrades().FirstOrDefault(t => t.GetTrigger() == trigger)).Field("descriptionKey").SetValue(DescriptionKey);
+            Data.GetCharacterTriggerUpgrades().FirstOrDefault(t => t.GetTrigger() == trigger).Field("descriptionKey").SetValue(DescriptionKey);
         }
     }
 }

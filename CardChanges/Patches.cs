@@ -4,7 +4,18 @@ namespace CardChanges
 {
     public static class Patches
     {
-        public static void HellhornedReworks()
+        public static void LunaCoven()
+        {
+            Mod.Card(Cards.AuroraWeaver).Monster.AddStartingStatusEffects(StatusEffect.Conduit.Stack(5));
+
+            var Mooncaller = Mod.Card(Cards.Mooncaller);
+            Mooncaller.Monster.SetDamage(8);
+            Mooncaller.Monster.SetHP(8);
+
+            Mod.Card(Cards.RitualTome).SetCost(1);
+        }
+
+        public static void Hellhorned()
         {
             //
             // Champions
@@ -36,16 +47,19 @@ namespace CardChanges
             Reaper3.SetBonusHP(30);
 
             var Wrathful1 = Mod.Upgrade(Upgrades.Wrathful1);
-            Wrathful1.SetBonusDamage(20);
-            Wrathful1.SetBonusHP(40);
+            Wrathful1.SetBonusDamage(10);
+            Wrathful1.SetBonusHP(10);
+            Wrathful1.AddStatusEffectUpgrades(StatusEffect.Armor.Stack(10));
 
             var Wrathful2 = Mod.Upgrade(Upgrades.Wrathful2);
-            Wrathful2.SetBonusDamage(30);
-            Wrathful2.SetBonusHP(50);
+            Wrathful2.SetBonusDamage(20);
+            Wrathful2.SetBonusHP(20);
+            Wrathful2.AddStatusEffectUpgrades(StatusEffect.Armor.Stack(15));
 
             var Wrathful3 = Mod.Upgrade(Upgrades.Wrathful3);
             Wrathful3.SetBonusDamage(40);
-            Wrathful3.SetBonusHP(60);
+            Wrathful3.SetBonusHP(40);
+            Wrathful3.AddStatusEffectUpgrades(StatusEffect.Armor.Stack(25));
 
             //
             // Units
@@ -53,17 +67,17 @@ namespace CardChanges
 
             var Steelworker = Mod.Card(Cards.Steelworker);
             Steelworker.Monster.SetHP(10);
-            Steelworker.Monster.AddStartingStatusEffects(Mod.Status(StatusEffect.Armor, 30));
+            Steelworker.Monster.AddStartingStatusEffects(StatusEffect.Armor.Stack(30));
 
             //
             // Spells
             //
 
-            Mod.Card(Cards.Torch).AddTraits(Mod.Trait(CardTrait.Piercing));
-            Mod.Card(Cards.Vent).AddTraits(Mod.Trait(CardTrait.Piercing));
+            Mod.Card(Cards.Torch).AddTraits(CardTrait.Piercing.Instance());
+            Mod.Card(Cards.Vent).AddTraits(CardTrait.Piercing.Instance());
         }
 
-        public static void AwokenReworks()
+        public static void Awoken()
         {
             //
             // Units
@@ -71,9 +85,15 @@ namespace CardChanges
 
             Mod.Card(Cards.ShardChanneler).Monster.SetHP(5);
             Mod.Card(Cards.WildwoodCustodian).Monster.SetHP(5);
+
+            //
+            // Spells
+            //
+
+            Mod.Card(Cards.Sting).SetDamage(25);
         }
 
-        public static void StygianReworks()
+        public static void StygianGuard()
         {
             //
             // Units
@@ -98,12 +118,12 @@ namespace CardChanges
             var GuardoftheUnnamed = Mod.Card(Cards.GuardoftheUnnamed);
             GuardoftheUnnamed.Monster.SetDamage(5);
             GuardoftheUnnamed.Monster.SetHP(20);
-            GuardoftheUnnamed.Monster.AddStartingStatusEffects(Mod.Status(StatusEffect.Armor, 20));
+            GuardoftheUnnamed.Monster.AddStartingStatusEffects(StatusEffect.Armor.Stack(20));
 
             var TitanSentry = Mod.Card(Cards.TitanSentry);
             TitanSentry.Monster.SetDamage(5);
             TitanSentry.Monster.SetHP(20);
-            TitanSentry.Monster.AddStartingStatusEffects(Mod.Status(StatusEffect.Armor, 20));
+            TitanSentry.Monster.AddStartingStatusEffects(StatusEffect.Armor.Stack(20));
             TitanSentry.Monster.Data.GetTriggers()
                                     .FirstOrDefault()
                                     .GetEffects()
@@ -111,13 +131,24 @@ namespace CardChanges
                                     .GetParamStatusEffects()
                                     .FirstOrDefault(t => t.statusId == StatusEffect.Frostbite.GetID())
                                     .count = 9;
+
+            //
+            // Spells
+            //
+
+            Mod.Card(Cards.FrozenLance).AddTraits(CardTrait.Attuned.Instance());
+            Mod.Card(Cards.Titanstooth).AddTraits(CardTrait.Attuned.Instance());
         }
 
-        public static void UmbraReworks()
+        public static void Umbra()
         {
             //
             // Units
             //
+
+            var MorselMiner = Mod.Card(Cards.MorselMiner);
+            MorselMiner.Monster.SetDamage(9);
+            MorselMiner.Monster.SetHP(9);
 
             var Morselmaker = Mod.Card(Cards.Morselmaker);
             Morselmaker.SetCost(1);
@@ -132,11 +163,12 @@ namespace CardChanges
             var MorselMade = Mod.Card(Cards.MorselMade);
             MorselMade.Monster.SetDamage(9);
             MorselMade.Monster.SetHP(9);
-            var MorselMadeUpgrade = new ModCardUpgradeData(MorselMade.Monster.Data.GetTriggers()
-                                                                                  .FirstOrDefault(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnFeed)
-                                                                                  .GetEffects()
-                                                                                  .FirstOrDefault(t => !(t.GetParamCardUpgradeData() is null))
-                                                                                  .GetParamCardUpgradeData());
+            var MorselMadeUpgrade = MorselMade.Monster.Data.GetTriggers()
+                                                           .FirstOrDefault(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnFeed)
+                                                           .GetEffects()
+                                                           .FirstOrDefault(t => !(t.GetParamCardUpgradeData() is null))
+                                                           .GetParamCardUpgradeData()
+                                                           .ToModGameData();
             MorselMadeUpgrade.SetBonusDamage(9);
             MorselMadeUpgrade.SetBonusHP(9);
 
@@ -146,10 +178,10 @@ namespace CardChanges
             Shadowsiege.SetCost(0);
             Shadowsiege.Monster.SetDamage(180);
             Shadowsiege.Monster.SetHP(180);
-            Shadowsiege.Monster.AddStartingStatusEffects(Mod.Status(StatusEffect.Emberdrain, 3));
+            Shadowsiege.Monster.AddStartingStatusEffects(StatusEffect.Emberdrain.Stack(3));
         }
 
-        public static void MeltingRemnantReworks()
+        public static void MeltingRemnant()
         {
             //
             // Spells

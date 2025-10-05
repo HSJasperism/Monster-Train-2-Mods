@@ -1,7 +1,5 @@
 ﻿using BepInEx;
 using HarmonyLib;
-using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace CardChanges
@@ -28,22 +26,16 @@ namespace CardChanges
     {
         public static void Postfix()
         {
-            var stopwatch = Stopwatch.StartNew();
-
             CardChanges.ModDataManager ??= new DataManager();
-
             var PatchingTasks = new Task[]
             {
-                Task.Run(() => Patches.HellhornedReworks()),
-                Task.Run(() => Patches.AwokenReworks()),
-                Task.Run(() => Patches.StygianReworks()),
-                Task.Run(() => Patches.UmbraReworks()),
-                Task.Run(() => Patches.MeltingRemnantReworks())
+                Task.Run(() => Patches.LunaCoven()),
+                Task.Run(() => Patches.Hellhorned()),
+                Task.Run(() => Patches.Awoken()),
+                Task.Run(() => Patches.StygianGuard()),
+                Task.Run(() => Patches.Umbra()),
+                Task.Run(() => Patches.MeltingRemnant())
             };
-            Task.WaitAll(PatchingTasks);
-
-            stopwatch.Stop();
-            Logging.LogInfo($"Completed data patching for {CardChanges.GUID} in {stopwatch.ElapsedMilliseconds}ms.");
         }
     }
 }
