@@ -1,6 +1,5 @@
 ﻿using BepInEx;
 using HarmonyLib;
-using System.Threading.Tasks;
 
 namespace CardChanges
 {
@@ -27,15 +26,14 @@ namespace CardChanges
         public static void Postfix()
         {
             CardChanges.ModDataManager ??= new DataManager();
-            var PatchingTasks = new Task[]
-            {
-                Task.Run(() => Patches.LunaCoven()),
-                Task.Run(() => Patches.Hellhorned()),
-                Task.Run(() => Patches.Awoken()),
-                Task.Run(() => Patches.StygianGuard()),
-                Task.Run(() => Patches.Umbra()),
-                Task.Run(() => Patches.MeltingRemnant())
-            };
+
+            Patches.LunaCoven.Start();
+            Patches.Underlegion.Start();
+            Patches.Hellhorned.Start();
+            Patches.Awoken.Start();
+            Patches.StygianGuard.Start();
+            Patches.Umbra.Start();
+            Patches.MeltingRemnant.Start();
         }
     }
 }

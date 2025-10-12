@@ -1,21 +1,42 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 
 namespace CardChanges
 {
     public static class Patches
     {
-        public static void LunaCoven()
+        public static Task LunaCoven = new Task(() =>
         {
+            //
+            // Units
+            //
+
             Mod.Card(Cards.AuroraWeaver).Monster.AddStartingStatusEffects(StatusEffect.Conduit.Stack(5));
 
             var Mooncaller = Mod.Card(Cards.Mooncaller);
             Mooncaller.Monster.SetDamage(8);
             Mooncaller.Monster.SetHP(8);
 
-            Mod.Card(Cards.RitualTome).SetCost(1);
-        }
+            //
+            // Spells
+            //
 
-        public static void Hellhorned()
+            Mod.Card(Cards.RitualTome).SetCost(1);
+        });
+
+        public static Task Underlegion = new Task(() =>
+        {
+            //
+            // Units
+            //
+
+            var Balmabello = Mod.Card(Cards.Balmabello);
+            Balmabello.SetCost(2);
+            Balmabello.Monster.SetDamage(20);
+            Balmabello.Monster.SetHP(20);
+        });
+
+        public static Task Hellhorned = new Task(() =>
         {
             //
             // Champions
@@ -75,9 +96,9 @@ namespace CardChanges
 
             Mod.Card(Cards.Torch).AddTraits(CardTrait.Piercing.Instance());
             Mod.Card(Cards.Vent).AddTraits(CardTrait.Piercing.Instance());
-        }
+        });
 
-        public static void Awoken()
+        public static Task Awoken = new Task(() =>
         {
             //
             // Units
@@ -91,9 +112,9 @@ namespace CardChanges
             //
 
             Mod.Card(Cards.Sting).SetDamage(25);
-        }
+        });
 
-        public static void StygianGuard()
+        public static Task StygianGuard = new Task(() =>
         {
             //
             // Units
@@ -108,11 +129,11 @@ namespace CardChanges
             SirenoftheSea.Monster.SetHP(12);
 
             var Coldcaelia = Mod.Card(Cards.Coldcaelia);
-            Coldcaelia.Monster.SetDamage(5);
+            Coldcaelia.Monster.SetDamage(4);
             Coldcaelia.Monster.SetHP(20);
 
             var IcyCilophyte = Mod.Card(Cards.IcyCilophyte);
-            IcyCilophyte.Monster.SetDamage(5);
+            IcyCilophyte.Monster.SetDamage(4);
             IcyCilophyte.Monster.SetHP(20);
 
             var GuardoftheUnnamed = Mod.Card(Cards.GuardoftheUnnamed);
@@ -125,12 +146,21 @@ namespace CardChanges
             TitanSentry.Monster.SetHP(20);
             TitanSentry.Monster.AddStartingStatusEffects(StatusEffect.Armor.Stack(20));
             TitanSentry.Monster.Data.GetTriggers()
-                                    .FirstOrDefault()
+                                    .FirstOrDefault(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnHit)
                                     .GetEffects()
-                                    .FirstOrDefault()
+                                    .FirstOrDefault(t => t.GetEffectStateName() == "CardEffectAddStatusEffect")
                                     .GetParamStatusEffects()
                                     .FirstOrDefault(t => t.statusId == StatusEffect.Frostbite.GetID())
                                     .count = 9;
+
+            var GlacialSeal = Mod.Card(Cards.GlacialSeal);
+            GlacialSeal.Monster.Data.GetTriggers()
+                                    .FirstOrDefault(t => t.GetTrigger() == CharacterTriggerData.Trigger.CardSpellPlayed)
+                                    .GetEffects()
+                                    .FirstOrDefault(t => t.GetEffectStateName() == "CardEffectAddStatusEffect")
+                                    .GetParamStatusEffects()
+                                    .FirstOrDefault(t => t.statusId == StatusEffect.Frostbite.GetID())
+                                    .count = 3;
 
             //
             // Spells
@@ -138,9 +168,9 @@ namespace CardChanges
 
             Mod.Card(Cards.FrozenLance).AddTraits(CardTrait.Attuned.Instance());
             Mod.Card(Cards.Titanstooth).AddTraits(CardTrait.Attuned.Instance());
-        }
+        });
 
-        public static void Umbra()
+        public static Task Umbra = new Task(() =>
         {
             //
             // Units
@@ -151,12 +181,10 @@ namespace CardChanges
             MorselMiner.Monster.SetHP(9);
 
             var Morselmaker = Mod.Card(Cards.Morselmaker);
-            Morselmaker.SetCost(1);
             Morselmaker.Monster.SetDamage(9);
             Morselmaker.Monster.SetHP(9);
 
             var Morselmaster = Mod.Card(Cards.Morselmaster);
-            Morselmaster.SetCost(1);
             Morselmaster.Monster.SetDamage(9);
             Morselmaster.Monster.SetHP(9);
 
@@ -179,15 +207,16 @@ namespace CardChanges
             Shadowsiege.Monster.SetDamage(180);
             Shadowsiege.Monster.SetHP(180);
             Shadowsiege.Monster.AddStartingStatusEffects(StatusEffect.Emberdrain.Stack(3));
-        }
+        });
 
-        public static void MeltingRemnant()
+        public static Task MeltingRemnant = new Task(() =>
         {
             //
             // Spells
             //
 
             Mod.Card(Cards.AFatalMelting).SetCost(1);
-        }
+            Mod.Card(Cards.MementoMori).SetCost(1);
+        });
     }
 }
