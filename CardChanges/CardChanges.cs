@@ -11,8 +11,6 @@ namespace CardChanges
         public const string NAME = "Card Changes";
         public const string VERSION = "0.0.1";
 
-        public static DataManager ModDataManager;
-
         public void Awake()
         {
             var Hook = new Harmony(GUID);
@@ -25,8 +23,7 @@ namespace CardChanges
     {
         public static void Postfix()
         {
-            CardChanges.ModDataManager ??= new DataManager();
-
+            Mod.ValidateData();
             Patches.LunaCoven.Start();
             Patches.Underlegion.Start();
             Patches.Hellhorned.Start();

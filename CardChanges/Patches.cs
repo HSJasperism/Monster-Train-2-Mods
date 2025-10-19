@@ -112,6 +112,18 @@ namespace CardChanges
             //
 
             Mod.Card(Cards.Sting).SetDamage(25);
+
+            var CycleofLife = Mod.Card(Cards.CycleofLife);
+            CycleofLife.Data.GetEffects()
+                            .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                            .GetParamStatusEffects()
+                            .Single(t => t.statusId == StatusEffect.Spikes.GetID())
+                            .count = 12;
+            CycleofLife.Data.GetEffects()
+                            .Single(t => !(t.GetParamCardUpgradeData() is null))
+                            .GetParamCardUpgradeData()
+                            .ToModGameData()
+                            .SetBonusHP(12);
         });
 
         public static Task StygianGuard = new Task(() =>
@@ -140,27 +152,39 @@ namespace CardChanges
             GuardoftheUnnamed.Monster.SetDamage(5);
             GuardoftheUnnamed.Monster.SetHP(20);
             GuardoftheUnnamed.Monster.AddStartingStatusEffects(StatusEffect.Armor.Stack(20));
+            GuardoftheUnnamed.Monster.GetTrigger(CharacterTriggerData.Trigger.CardSpellPlayed)
+                                     .GetEffects()
+                                     .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                                     .GetParamStatusEffects()
+                                     .Single(t => t.statusId == StatusEffect.Armor.GetID()).count = 5;
 
             var TitanSentry = Mod.Card(Cards.TitanSentry);
             TitanSentry.Monster.SetDamage(5);
             TitanSentry.Monster.SetHP(20);
             TitanSentry.Monster.AddStartingStatusEffects(StatusEffect.Armor.Stack(20));
-            TitanSentry.Monster.Data.GetTriggers()
-                                    .FirstOrDefault(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnHit)
-                                    .GetEffects()
-                                    .FirstOrDefault(t => t.GetEffectStateName() == "CardEffectAddStatusEffect")
-                                    .GetParamStatusEffects()
-                                    .FirstOrDefault(t => t.statusId == StatusEffect.Frostbite.GetID())
-                                    .count = 9;
+            TitanSentry.Monster.GetTrigger(CharacterTriggerData.Trigger.OnHit)
+                               .GetEffects()
+                               .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                               .GetParamStatusEffects()
+                               .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 9;
 
             var GlacialSeal = Mod.Card(Cards.GlacialSeal);
-            GlacialSeal.Monster.Data.GetTriggers()
-                                    .FirstOrDefault(t => t.GetTrigger() == CharacterTriggerData.Trigger.CardSpellPlayed)
-                                    .GetEffects()
-                                    .FirstOrDefault(t => t.GetEffectStateName() == "CardEffectAddStatusEffect")
-                                    .GetParamStatusEffects()
-                                    .FirstOrDefault(t => t.statusId == StatusEffect.Frostbite.GetID())
-                                    .count = 3;
+            GlacialSeal.Monster.GetTrigger(CharacterTriggerData.Trigger.CardSpellPlayed)
+                               .GetEffects()
+                               .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                               .GetParamStatusEffects()
+                               .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 3;
+
+            var GuardianStone = Mod.Card(Cards.GuardianStone);
+            GuardianStone.Monster.GetTrigger(CharacterTriggerData.Trigger.CardSpellPlayed)
+                                 .GetEffects()
+                                 .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                                 .GetParamStatusEffects()
+                                 .Single(t => t.statusId == StatusEffect.Armor.GetID()).count = 3;
+
+            var EelGorgon = Mod.Card(Cards.EelGorgon);
+            EelGorgon.Monster.SetDamage(15);
+            EelGorgon.Monster.SetHP(9);
 
             //
             // Spells
@@ -191,14 +215,13 @@ namespace CardChanges
             var MorselMade = Mod.Card(Cards.MorselMade);
             MorselMade.Monster.SetDamage(9);
             MorselMade.Monster.SetHP(9);
-            var MorselMadeUpgrade = MorselMade.Monster.Data.GetTriggers()
-                                                           .FirstOrDefault(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnFeed)
-                                                           .GetEffects()
-                                                           .FirstOrDefault(t => !(t.GetParamCardUpgradeData() is null))
-                                                           .GetParamCardUpgradeData()
-                                                           .ToModGameData();
-            MorselMadeUpgrade.SetBonusDamage(9);
-            MorselMadeUpgrade.SetBonusHP(9);
+            MorselMade.Monster.GetTrigger(CharacterTriggerData.Trigger.OnFeed)
+                              .GetEffects()
+                              .Single(t => !(t.GetParamCardUpgradeData() is null))
+                              .GetParamCardUpgradeData()
+                              .ToModGameData()
+                              .SetBonusDamage(9)
+                              .SetBonusHP(9);
 
             Mod.Card(Cards.Overgorger).Monster.SetHP(50);
 
@@ -206,7 +229,7 @@ namespace CardChanges
             Shadowsiege.SetCost(0);
             Shadowsiege.Monster.SetDamage(180);
             Shadowsiege.Monster.SetHP(180);
-            Shadowsiege.Monster.AddStartingStatusEffects(StatusEffect.Emberdrain.Stack(3));
+            Shadowsiege.Monster.AddStartingStatusEffects(StatusEffect.Trample.Stack(), StatusEffect.Emberdrain.Stack(3));
         });
 
         public static Task MeltingRemnant = new Task(() =>

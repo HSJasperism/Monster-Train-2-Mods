@@ -41,33 +41,31 @@ namespace CardChanges
 
     public static class Mod
     {
-        private static AllGameData _Data;
-        public static AllGameData Data
+        public static readonly DataManager DataManager;
+        public static readonly AllGameData Data;
+
+        static Mod()
         {
-            get
-            {
-                _Data ??= CardChanges.ModDataManager.GameData.GetAllGameData();
-                return _Data;
-            }
+            DataManager = new DataManager();
+            Data = DataManager.GameData.GetAllGameData();
         }
 
-        public static ModCardData Card(Cards card)
-            => new ModCardData(Data.FindCardData(card.GetID()));
+        public static void ValidateData()
+        {
+            if (Data is null) throw new Exception("ModData not properly initialized");
+        }
 
-        public static ModCardUpgradeData Upgrade(Upgrades upgrade)
-            => new ModCardUpgradeData(Data.FindCardUpgradeData(upgrade.GetID()));
+        public static ModCardData Card(Cards card) => new ModCardData(Data.FindCardData(card.GetID()));
 
-        public static ModCardUpgradeData ToModGameData(this CardUpgradeData upgrade)
-            => new ModCardUpgradeData(upgrade);
+        public static ModCardUpgradeData Upgrade(Upgrades upgrade) => new ModCardUpgradeData(Data.FindCardUpgradeData(upgrade.GetID()));
 
-        public static Traverse Field(this CharacterTriggerData characterTriggerData, string field)
-            => Traverse.Create(characterTriggerData).Field(field);
+        public static ModCardUpgradeData ToModGameData(this CardUpgradeData upgrade) => new ModCardUpgradeData(upgrade);
 
-        public static Traverse Field(this CardEffectData cardEffectData, string field)
-            => Traverse.Create(cardEffectData).Field(field);
+        public static Traverse Field(this CharacterTriggerData characterTriggerData, string field) => Traverse.Create(characterTriggerData).Field(field);
 
-        public static Traverse Field<T>(this T gameData, string field) where T : GameData
-            => Traverse.Create(gameData).Field(field);
+        public static Traverse Field(this CardEffectData cardEffectData, string field) => Traverse.Create(cardEffectData).Field(field);
+
+        public static Traverse Field<T>(this T gameData, string field) where T : GameData => Traverse.Create(gameData).Field(field);
 
         public static CardTraitData Instance(this CardTrait trait,
                                              float paramfloat = 0,
@@ -92,7 +90,13 @@ namespace CardChanges
         }
 
         public static StatusEffectStackData Stack(this StatusEffect status, int stackCount = 1)
-            => new StatusEffectStackData { statusId = status.GetID(), count = stackCount };
+        {
+            return new StatusEffectStackData
+            {
+                statusId = status.GetID(),
+                count = stackCount
+            };
+        }
     }
 
     public abstract class ModGameData<Type> where Type : GameData
@@ -152,37 +156,44 @@ namespace CardChanges
             }
         }
 
-        public void SetCost(int newCost)
+        public ModCardData SetCost(int newCost)
         {
             if (newCost < 0) newCost = 0;
             SetField("cost", newCost);
+            return this;
         }
 
-        public void AddTraits(params CardTraitData[] cardTraits)
+        public ModCardData AddTraits(params CardTraitData[] cardTraits)
         {
             List<CardTraitData> currentTraits = Data.GetTraits();
             if (currentTraits is null) SetField("traits", cardTraits.ToList());
             else currentTraits.AddRange(cardTraits);
+            return this;
         }
 
-        public void SetDamage(int damage)
+        public ModCardData SetDamage(int damage)
         {
             if (Type == CardType.Spell)
             {
-                Data.GetEffects().FirstOrDefault(t => t.GetEffectStateName() == "CardEffectDamage").Field("paramInt").SetValue(damage);
+                foreach (var effect in Data.GetEffects().Where(t => t.GetEffectStateName() == typeof(CardEffectDamage).Name))
+                {
+                    effect.Field("paramInt").SetValue(damage);
+                }
             }
+            return this;
         }
 
-        public void SetDescription(string en,
-                                   string fr = "",
-                                   string de = "",
-                                   string ru = "",
-                                   string pt = "",
-                                   string zh = "")
+        public ModCardData SetDescription(string en,
+                                          string fr = "",
+                                          string de = "",
+                                          string ru = "",
+                                          string pt = "",
+                                          string zh = "")
         {
             string DescriptionKey = $"mod_card_description_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
             SetField("overrideDescriptionKey", DescriptionKey);
+            return this;
         }
     }
 
@@ -193,34 +204,46 @@ namespace CardChanges
             if (Data is null) Logging.LogError("Couldn't find monster - This will cause crashes.");
         }
 
-        public void SetDamage(int newDamage) => SetField("attackDamage", newDamage);
-
-        public void SetHP(int newHP) => SetField("health", newHP);
-
-        public void AddStartingStatusEffects(params StatusEffectStackData[] data)
+        public ModCharacterData SetDamage(int newDamage)
         {
-            StatusEffectStackData[] StartingStatuses = Data.GetStartingStatusEffects();
-            if (StartingStatuses.IsNullOrEmpty()) SetField("startingStatusEffects", data);
-            else
-            {
-                var newArray = new StatusEffectStackData[StartingStatuses.Length + data.Length];
-                StartingStatuses.CopyTo(newArray, 0);
-                data.CopyTo(newArray, StartingStatuses.Length);
-                SetField("startingStatusEffects", newArray);
-            }
+            SetField("attackDamage", newDamage);
+            return this;
         }
 
-        public void SetTriggerDescription(CharacterTriggerData.Trigger trigger,
-                                          string en,
-                                          string fr = "",
-                                          string de = "",
-                                          string ru = "",
-                                          string pt = "",
-                                          string zh = "")
+        public ModCharacterData SetHP(int newHP)
+        {
+            SetField("health", newHP);
+            return this;
+        }
+
+        public CharacterTriggerData GetTrigger(CharacterTriggerData.Trigger trigger) => Data.GetTriggers().Single(t => t.GetTrigger() == trigger);
+
+        public ModCharacterData AddStartingStatusEffects(params StatusEffectStackData[] AddedStatuses)
+        {
+            StatusEffectStackData[] StartingStatuses = Data.GetStartingStatusEffects();
+            if (StartingStatuses.IsNullOrEmpty()) SetField("startingStatusEffects", AddedStatuses);
+            else
+            {
+                var StatusList = new List<StatusEffectStackData>(StartingStatuses.Length + AddedStatuses.Length);
+                StatusList.AddRange(StartingStatuses);
+                StatusList.AddRange(AddedStatuses);
+                SetField("startingStatusEffects", StatusList.ToArray());
+            }
+            return this;
+        }
+
+        public ModCharacterData SetTriggerDescription(CharacterTriggerData.Trigger trigger,
+                                                      string en,
+                                                      string fr = "",
+                                                      string de = "",
+                                                      string ru = "",
+                                                      string pt = "",
+                                                      string zh = "")
         {
             string DescriptionKey = $"mod_unit_trigger_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Data.GetTriggers().FirstOrDefault(t => t.GetTrigger() == trigger).Field("descriptionKey").SetValue(DescriptionKey);
+            Data.GetTriggers().Single(t => t.GetTrigger() == trigger).Field("descriptionKey").SetValue(DescriptionKey);
+            return this;
         }
     }
 
@@ -231,43 +254,56 @@ namespace CardChanges
             if (Data is null) Logging.LogWarning("Couldn't find upgrade - This will cause crashes.");
         }
 
-        public void SetBonusDamage(int value) => SetField("bonusDamage", value);
+        public ModCardUpgradeData SetBonusDamage(int value)
+        {
+            SetField("bonusDamage", value);
+            return this;
+        }
 
-        public void SetBonusHP(int value) => SetField("bonusHP", value);
+        public ModCardUpgradeData SetBonusHP(int value)
+        {
+            SetField("bonusHP", value);
+            return this;
+        }
 
         public StatusEffectStackData GetStatusEffectUpgrade(StatusEffect status)
-            => Data.GetStatusEffectUpgrades().FirstOrDefault(t => t.statusId == status.GetID());
+        {
+            return Data.GetStatusEffectUpgrades().Single(t => t.statusId == status.GetID());
+        }
 
-        public void AddStatusEffectUpgrades(params StatusEffectStackData[] data)
+        public ModCardUpgradeData AddStatusEffectUpgrades(params StatusEffectStackData[] data)
         {
             var currentStatusEffects = GetField<List<StatusEffectStackData>>("statusEffectUpgrades");
             if (currentStatusEffects is null) SetField("statusEffectUpgrades", data.ToList());
             else currentStatusEffects.AddRange(data);
+            return this;
         }
 
-        public void SetUpgradeDescription(string en,
-                                          string fr = "",
-                                          string de = "",
-                                          string ru = "",
-                                          string pt = "",
-                                          string zh = "")
+        public ModCardUpgradeData SetUpgradeDescription(string en,
+                                                        string fr = "",
+                                                        string de = "",
+                                                        string ru = "",
+                                                        string pt = "",
+                                                        string zh = "")
         {
             string DescriptionKey = $"mod_upgrade_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
             SetField("upgradeDescriptionKey", DescriptionKey);
+            return this;
         }
 
-        public void SetTriggerDescription(CharacterTriggerData.Trigger trigger,
-                                          string en,
-                                          string fr = "",
-                                          string de = "",
-                                          string ru = "",
-                                          string pt = "",
-                                          string zh = "")
+        public ModCardUpgradeData SetTriggerDescription(CharacterTriggerData.Trigger trigger,
+                                                        string en,
+                                                        string fr = "",
+                                                        string de = "",
+                                                        string ru = "",
+                                                        string pt = "",
+                                                        string zh = "")
         {
             string DescriptionKey = $"mod_upgrade_trigger_{ID}";
             ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Data.GetCharacterTriggerUpgrades().FirstOrDefault(t => t.GetTrigger() == trigger).Field("descriptionKey").SetValue(DescriptionKey);
+            Data.GetCharacterTriggerUpgrades().Single(t => t.GetTrigger() == trigger).Field("descriptionKey").SetValue(DescriptionKey);
+            return this;
         }
     }
 }
