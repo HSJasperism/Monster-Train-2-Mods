@@ -114,20 +114,83 @@ namespace CardChanges
             Mod.Card(Cards.Sting).SetDamage(25);
 
             var CycleofLife = Mod.Card(Cards.CycleofLife);
-            CycleofLife.Data.GetEffects()
-                            .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
-                            .GetParamStatusEffects()
-                            .Single(t => t.statusId == StatusEffect.Spikes.GetID())
-                            .count = 12;
-            CycleofLife.Data.GetEffects()
-                            .Single(t => !(t.GetParamCardUpgradeData() is null))
-                            .GetParamCardUpgradeData()
-                            .ToModGameData()
-                            .SetBonusHP(12);
+            CycleofLife.GetEffect(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                       .GetParamStatusEffects()
+                       .Single(t => t.statusId == StatusEffect.Spikes.GetID()).count = 12;
+            CycleofLife.GetEffect(t => !(t.GetParamCardUpgradeData() is null))
+                       .GetParamCardUpgradeData()
+                       .ToModGameData()
+                       .SetBonusHP(12);
         });
 
         public static Task StygianGuard = new Task(() =>
         {
+            //
+            // Champions
+            //
+
+            Mod.Card(Cards.SolgardtheMartyr).Monster.SetHP(8);
+
+            var Coldchannel1 = Mod.Upgrade(Upgrades.Coldchannel1);
+            Coldchannel1.SetBonusHP(32 - 8);
+
+            var Coldchannel2 = Mod.Upgrade(Upgrades.Coldchannel2);
+            Coldchannel2.SetBonusHP(64 - 8);
+            Coldchannel2.Data.GetCharacterTriggerUpgrades()
+                             .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnHit)
+                             .GetEffects()
+                             .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                             .GetParamStatusEffects()
+                             .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 2;
+
+            var Coldchannel3 = Mod.Upgrade(Upgrades.Coldchannel3);
+            Coldchannel3.SetBonusHP(128 - 8);
+            Coldchannel3.Data.GetCharacterTriggerUpgrades()
+                             .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnHit)
+                             .GetEffects()
+                             .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                             .GetParamStatusEffects()
+                             .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 4;
+
+            var Direchannel1 = Mod.Upgrade(Upgrades.Direchannel1);
+            Direchannel1.SetBonusHP(8 - 8);
+            Direchannel1.Data.GetCharacterTriggerUpgrades()
+                             .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnTurnBegin)
+                             .GetEffects()
+                             .Single(t => t.GetEffectStateName() == typeof(CardEffectDamage).Name)
+                             .Field("paramInt").SetValue(8);
+
+            var Direchannel2 = Mod.Upgrade(Upgrades.Direchannel2);
+            Direchannel2.SetBonusHP(16 - 8);
+            Direchannel2.Data.GetCharacterTriggerUpgrades()
+                             .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnTurnBegin)
+                             .GetEffects()
+                             .Single(t => t.GetEffectStateName() == typeof(CardEffectDamage).Name)
+                             .Field("paramInt").SetValue(16);
+
+            var Direchannel3 = Mod.Upgrade(Upgrades.Direchannel3);
+            Direchannel3.SetBonusHP(32 - 8);
+            Direchannel3.Data.GetCharacterTriggerUpgrades()
+                             .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnTurnBegin)
+                             .GetEffects()
+                             .Single(t => t.GetEffectStateName() == typeof(CardEffectDamage).Name)
+                             .Field("paramInt").SetValue(32);
+
+            var Titanchannel1 = Mod.Upgrade(Upgrades.Titanchannel1);
+            Titanchannel1.SetBonusDamage(8);
+
+            var Titanchannel2 = Mod.Upgrade(Upgrades.Titanchannel2);
+            Titanchannel2.SetBonusDamage(12);
+            Titanchannel2.SetBonusHP(12 - 8);
+
+            var Titanchannel3 = Mod.Upgrade(Upgrades.Titanchannel3);
+            Titanchannel3.SetBonusDamage(16);
+            Titanchannel3.SetBonusHP(16 - 8);
+
+            var Resurgence3 = Mod.Upgrade(Upgrades.Resurgence3);
+            Resurgence3.SetBonusDamage(16);
+            Resurgence3.SetBonusHP(16);
+
             //
             // Units
             //
@@ -166,7 +229,7 @@ namespace CardChanges
                                .GetEffects()
                                .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
                                .GetParamStatusEffects()
-                               .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 9;
+                               .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 10;
 
             var GlacialSeal = Mod.Card(Cards.GlacialSeal);
             GlacialSeal.Monster.GetTrigger(CharacterTriggerData.Trigger.CardSpellPlayed)

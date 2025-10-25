@@ -602,15 +602,13 @@ namespace CardChanges
     public enum Upgrades
     {
         None = 0,
-        Brawler1,
-        Brawler2,
-        Brawler3,
-        Reaper1,
-        Reaper2,
-        Reaper3,
-        Wrathful1,
-        Wrathful2,
-        Wrathful3,
+        Brawler1, Brawler2, Brawler3,
+        Reaper1, Reaper2, Reaper3,
+        Wrathful1, Wrathful2, Wrathful3,
+        Coldchannel1, Coldchannel2, Coldchannel3,
+        Direchannel1, Direchannel2, Direchannel3,
+        Titanchannel1, Titanchannel2, Titanchannel3,
+        Resurgence1, Resurgence2, Resurgence3
     }
 
     public static class EnumExtensions
@@ -1218,15 +1216,27 @@ namespace CardChanges
         public static string GetID(this Upgrades value) => UpgradeIDs[value];
         internal static Dictionary<Upgrades, string> UpgradeIDs = new Dictionary<Upgrades, string>
         {
-            { Upgrades.Brawler1, "6057fccd-90dc-4c97-b64b-cca5a02f4766" },
-            { Upgrades.Brawler2, "b1476ffd-d425-46d6-89d6-975921a8f58c" },
-            { Upgrades.Brawler3, "142535b6-ad20-4fa3-8a6b-4fff4ad45784" },
-            { Upgrades.Reaper1, "96f93f28-0d3c-4b62-aabc-f7de6b655995" },
-            { Upgrades.Reaper2, "86d92229-18f2-4644-8d01-08e195de9253" },
-            { Upgrades.Reaper3, "0bc77389-97b7-4073-b00e-111293e706a4" },
-            { Upgrades.Wrathful1, "bbedbbd7-cf93-4b27-920a-36815e404a9a" },
-            { Upgrades.Wrathful2, "71ca2e13-c5de-426d-997a-45d0f9e21a34" },
-            { Upgrades.Wrathful3, "93e65477-e418-4da8-b456-e3e3d9d269fa" }
+            { Upgrades.Brawler1,        "6057fccd-90dc-4c97-b64b-cca5a02f4766" },
+            { Upgrades.Brawler2,        "b1476ffd-d425-46d6-89d6-975921a8f58c" },
+            { Upgrades.Brawler3,        "142535b6-ad20-4fa3-8a6b-4fff4ad45784" },
+            { Upgrades.Reaper1,         "96f93f28-0d3c-4b62-aabc-f7de6b655995" },
+            { Upgrades.Reaper2,         "86d92229-18f2-4644-8d01-08e195de9253" },
+            { Upgrades.Reaper3,         "0bc77389-97b7-4073-b00e-111293e706a4" },
+            { Upgrades.Wrathful1,       "bbedbbd7-cf93-4b27-920a-36815e404a9a" },
+            { Upgrades.Wrathful2,       "71ca2e13-c5de-426d-997a-45d0f9e21a34" },
+            { Upgrades.Wrathful3,       "93e65477-e418-4da8-b456-e3e3d9d269fa" },
+            { Upgrades.Coldchannel1,    "SolgardStrikeFrostbitePerBlessing" },
+            { Upgrades.Coldchannel2,    "SolgardStrikeFrostbitePerBlessing2" },
+            { Upgrades.Coldchannel3,    "SolgardStrikeFrostbitePerBlessing3" },
+            { Upgrades.Direchannel1,    "SolgardRevengeDamagePerBlessing" },
+            { Upgrades.Direchannel2,    "SolgardRevengeDamagePerBlessing2" },
+            { Upgrades.Direchannel3,    "SolgardRevengeDamagePerBlessing3" },
+            { Upgrades.Titanchannel1,   "SolgardStasisGoodStats" },
+            { Upgrades.Titanchannel2,   "SolgardStasisGoodStats2" },
+            { Upgrades.Titanchannel3,   "SolgardStasisGoodStats3" },
+            { Upgrades.Resurgence1,     "SolgardStasisGoodStatsAbility_Upgrade1" },
+            { Upgrades.Resurgence2,     "SolgardStasisGoodStatsAbility_Upgrade2" },
+            { Upgrades.Resurgence3,     "SolgardStasisGoodStatsAbility_Upgrade3" }
         };
     }
 }

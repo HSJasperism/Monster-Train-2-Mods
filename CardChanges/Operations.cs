@@ -20,7 +20,7 @@ namespace CardChanges
 
         public CardStatistics CardStatistics => TryGetProvider<CardStatistics>();
 
-        public T TryGetProvider<T>() where T : IProvider => (T)_ProviderDictionary[typeof(T)];
+        private T TryGetProvider<T>() where T : IProvider => (T)_ProviderDictionary[typeof(T)];
 
         public void NewProviderAvailable(IProvider Provider)
         {
@@ -57,7 +57,24 @@ namespace CardChanges
 
         public static ModCardData Card(Cards card) => new ModCardData(Data.FindCardData(card.GetID()));
 
-        public static ModCardUpgradeData Upgrade(Upgrades upgrade) => new ModCardUpgradeData(Data.FindCardUpgradeData(upgrade.GetID()));
+        public static ModCardUpgradeData Upgrade(Upgrades upgrade)
+        {
+            string ID = upgrade.GetID();
+            switch (ID.Length)
+            {
+                case 36:
+                    try
+                    {
+                        return new ModCardUpgradeData(Data.GetAllCardUpgradeData().First(t => t.GetID() == ID));
+                    }
+                    catch
+                    {
+                        goto default;
+                    }
+                default:
+                    return new ModCardUpgradeData(Data.GetAllCardUpgradeData().First(t => t.name == ID));
+            }
+        }
 
         public static ModCardUpgradeData ToModGameData(this CardUpgradeData upgrade) => new ModCardUpgradeData(upgrade);
 
@@ -65,28 +82,31 @@ namespace CardChanges
 
         public static Traverse Field(this CardEffectData cardEffectData, string field) => Traverse.Create(cardEffectData).Field(field);
 
-        public static Traverse Field<T>(this T gameData, string field) where T : GameData => Traverse.Create(gameData).Field(field);
+        private static readonly Dictionary<CardTrait, CardTraitData> TraitCache = new Dictionary<CardTrait, CardTraitData>(3);
 
-        public static CardTraitData Instance(this CardTrait trait,
-                                             float paramfloat = 0,
-                                             int paramint = 0,
-                                             string paramstr = "",
-                                             string paramsubtype = "SubtypesData_None",
-                                             string paramdesc = "",
-                                             Team.Type paramteamtype = Team.Type.None,
-                                             StatusEffectStackData[] paramstatuseffects = null)
+        public static bool HasTrait(this CardData Card, CardTrait Trait)
         {
-            var Trait = new CardTraitData { traitStateName = trait.GetID() };
-            var TraverseTrait = Traverse.Create(Trait);
-            TraverseTrait.Field("paramFloat").SetValue(paramfloat);
-            TraverseTrait.Field("paramInt").SetValue(paramint);
-            TraverseTrait.Field("paramStr").SetValue(paramstr);
-            TraverseTrait.Field("paramDescription").SetValue(paramdesc);
-            TraverseTrait.Field("paramTeamType").SetValue(paramteamtype);
-            TraverseTrait.Field("paramSubtype").SetValue(paramsubtype);
-            paramstatuseffects ??= new StatusEffectStackData[0];
-            TraverseTrait.Field("paramStatusEffects").SetValue(paramstatuseffects);
-            return Trait;
+            if (Card.GetTraits() is null) return false;
+            if (Card.GetTraits().FirstOrDefault(t => t.traitStateName == Trait.GetID()) is null) return false;
+            return true;
+        }
+
+        public static CardTraitData Instance(this CardTrait trait, int paramint = 0)
+        {
+            lock (TraitCache)
+            {
+                if (TraitCache.ContainsKey(trait)) return TraitCache[trait].Copy();
+
+                var ReferenceCards = from card in Data.GetAllCardData()
+                                     where card.HasTrait(trait)
+                                     select card;
+
+                var CardTrait = ReferenceCards.First().GetTraits().First(t => t.traitStateName == trait.GetID()).Copy();
+                TraitCache[trait] = CardTrait.Copy();
+                if (paramint != 0) CardTrait.SetParamInt(paramint);
+
+                return CardTrait;
+            }
         }
 
         public static StatusEffectStackData Stack(this StatusEffect status, int stackCount = 1)
@@ -156,6 +176,8 @@ namespace CardChanges
             }
         }
 
+        public CardEffectData GetEffect(Func<CardEffectData, bool> condition) => Data.GetEffects().Single(condition);
+
         public ModCardData SetCost(int newCost)
         {
             if (newCost < 0) newCost = 0;
@@ -216,7 +238,9 @@ namespace CardChanges
             return this;
         }
 
-        public CharacterTriggerData GetTrigger(CharacterTriggerData.Trigger trigger) => Data.GetTriggers().Single(t => t.GetTrigger() == trigger);
+        public CharacterTriggerData GetTrigger(Func<CharacterTriggerData, bool> condition) => Data.GetTriggers().Single(condition);
+
+        public CharacterTriggerData GetTrigger(CharacterTriggerData.Trigger trigger) => GetTrigger(t => t.GetTrigger() == trigger);
 
         public ModCharacterData AddStartingStatusEffects(params StatusEffectStackData[] AddedStatuses)
         {

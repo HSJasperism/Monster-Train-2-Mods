@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using System.Threading.Tasks;
 
 namespace CardChanges
 {
@@ -21,16 +22,21 @@ namespace CardChanges
     [HarmonyPatch(typeof(AssetLoadingManager), "Start")]
     public class PatchCardChanges
     {
-        public static void Postfix()
+        public static async void Postfix()
         {
             Mod.ValidateData();
-            Patches.LunaCoven.Start();
-            Patches.Underlegion.Start();
-            Patches.Hellhorned.Start();
-            Patches.Awoken.Start();
-            Patches.StygianGuard.Start();
-            Patches.Umbra.Start();
-            Patches.MeltingRemnant.Start();
+            var Tasks = new[]
+            {
+                Patches.LunaCoven,
+                Patches.Underlegion,
+                Patches.Hellhorned,
+                Patches.Awoken,
+                Patches.StygianGuard,
+                Patches.Umbra,
+                Patches.MeltingRemnant
+            };
+            foreach (var task in Tasks) task.Start();
+            await Task.WhenAll(Tasks);
         }
     }
 }
