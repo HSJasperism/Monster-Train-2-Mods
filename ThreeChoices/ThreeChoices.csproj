@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <MT2Path>E:/SteamLibrary/steamapps/common/Monster Train 2/</MT2Path>
-    <BepInExPath>E:/Thunderstore Mod Manager/DataFolder/MonsterTrain2/profiles/Default/BepInEx/</BepInExPath>
+    <MT2Path>$(HOME)/.local/share/Steam/steamapps/common/Monster Train 2/</MT2Path>
+    <BepInExPath>$(MT2Path)/BepInEx/</BepInExPath>
     <OutputPath>$(BepInExPath)/plugins/Three Choices/</OutputPath>
   </PropertyGroup>
 
