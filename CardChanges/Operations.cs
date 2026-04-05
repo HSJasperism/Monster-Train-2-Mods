@@ -25,15 +25,13 @@ namespace CardChanges
         public void NewProviderAvailable(IProvider Provider)
         {
             Type ProviderType = Provider.GetType();
-            if (_ProviderDictionary.ContainsKey(ProviderType)) Logging.LogWarning($"Duplicate Provider found: {Provider.GetType()}");
-            else _ProviderDictionary.Add(ProviderType, Provider);
+            if (!_ProviderDictionary.TryAdd(ProviderType, Provider)) Logging.LogWarning($"Duplicate Provider found: {Provider.GetType()}");
         }
 
         public void NewProviderFullyInstalled(IProvider Provider)
         {
             Type ProviderType = Provider.GetType();
-            if (_ProviderDictionary.ContainsKey(ProviderType)) Logging.LogInfo($"Provider active: {Provider.GetType()}");
-            else _ProviderDictionary.Add(ProviderType, Provider);
+            if (!_ProviderDictionary.TryAdd(ProviderType, Provider)) Logging.LogInfo($"Provider active: {Provider.GetType()}");
         }
 
         public void ProviderRemoved(IProvider Provider) => _ProviderDictionary.Remove(Provider.GetType());
@@ -86,7 +84,7 @@ namespace CardChanges
 
         public static bool HasTrait(this CardData Card, CardTrait Trait)
         {
-            if (Card.GetTraits() is null) return false;
+            if (Card.GetNumTraits() == 0) return false;
             if (Card.GetTraits().FirstOrDefault(t => t.traitStateName == Trait.GetID()) is null) return false;
             return true;
         }
@@ -95,7 +93,7 @@ namespace CardChanges
         {
             lock (TraitCache)
             {
-                if (TraitCache.ContainsKey(trait)) return TraitCache[trait].Copy();
+                if (TraitCache.TryGetValue(trait, out var value)) return value.Copy();
 
                 var ReferenceCards = from card in Data.GetAllCardData()
                                      where card.HasTrait(trait)
@@ -119,13 +117,13 @@ namespace CardChanges
         }
     }
 
-    public abstract class ModGameData<Type> where Type : GameData
+    public abstract class ModGameData<TGameData> where TGameData : GameData
     {
         public readonly string name;
         public readonly string ID;
-        public readonly Type Data;
+        public readonly TGameData Data;
 
-        protected ModGameData(Type objectData)
+        protected ModGameData(TGameData objectData)
         {
             name = objectData.name;
             ID = objectData.GetID();
@@ -187,9 +185,8 @@ namespace CardChanges
 
         public ModCardData AddTraits(params CardTraitData[] cardTraits)
         {
-            List<CardTraitData> currentTraits = Data.GetTraits();
-            if (currentTraits is null) SetField("traits", cardTraits.ToList());
-            else currentTraits.AddRange(cardTraits);
+            if (Data.GetNumTraits() == 0) SetField("traits", cardTraits.ToList());
+            else Data.GetTraits().AddRange(cardTraits);
             return this;
         }
 
@@ -197,7 +194,7 @@ namespace CardChanges
         {
             if (Type == CardType.Spell)
             {
-                foreach (var effect in Data.GetEffects().Where(t => t.GetEffectStateName() == typeof(CardEffectDamage).Name))
+                foreach (var effect in Data.GetEffects().Where(t => t.GetEffectStateName() == nameof(CardEffectDamage)))
                 {
                     effect.Field("paramInt").SetValue(damage);
                 }

@@ -614,7 +614,7 @@ namespace CardChanges
     public static class EnumExtensions
     {
         public static string GetID(this StatusEffect value) => StatusEffectIDs[value];
-        internal static Dictionary<StatusEffect, string> StatusEffectIDs = new Dictionary<StatusEffect, string>
+        internal static readonly Dictionary<StatusEffect, string> StatusEffectIDs = new Dictionary<StatusEffect, string>
         {
             { StatusEffect.None, null },
             { StatusEffect.Quick, StatusEffectAmbushState.StatusId },
@@ -688,7 +688,7 @@ namespace CardChanges
         };
 
         public static string GetID(this CardTrait value) => CardTraitIDs[value];
-        internal static Dictionary<CardTrait, string> CardTraitIDs = new Dictionary<CardTrait, string>
+        internal static readonly Dictionary<CardTrait, string> CardTraitIDs = new Dictionary<CardTrait, string>
         {
             { CardTrait.None , null },
             { CardTrait.Attuned, "CardTraitStrongerMagicPower" },
@@ -696,7 +696,7 @@ namespace CardChanges
         };
 
         public static string GetID(this Cards value) => CardIDs[value];
-        internal static Dictionary<Cards, string> CardIDs = new Dictionary<Cards, string>
+        internal static readonly Dictionary<Cards, string> CardIDs = new Dictionary<Cards, string>
         {
             { Cards.None, null },
             { Cards.AFatalMelting, "97d18bbe-6fa9-45a4-90a9-5a1d0ea24ca3" },
@@ -1214,7 +1214,7 @@ namespace CardChanges
         };
 
         public static string GetID(this Upgrades value) => UpgradeIDs[value];
-        internal static Dictionary<Upgrades, string> UpgradeIDs = new Dictionary<Upgrades, string>
+        internal static readonly Dictionary<Upgrades, string> UpgradeIDs = new Dictionary<Upgrades, string>
         {
             { Upgrades.Brawler1,        "6057fccd-90dc-4c97-b64b-cca5a02f4766" },
             { Upgrades.Brawler2,        "b1476ffd-d425-46d6-89d6-975921a8f58c" },

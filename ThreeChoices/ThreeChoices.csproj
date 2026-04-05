@@ -5,7 +5,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <MT2Path>$(HOME)/.local/share/Steam/steamapps/common/Monster Train 2/</MT2Path>
     <BepInExPath>$(MT2Path)/BepInEx/</BepInExPath>
-    <OutputPath>$(BepInExPath)/plugins/Three Choices/</OutputPath>
+    <OutputPath>$(BepInExPath)/plugins/</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

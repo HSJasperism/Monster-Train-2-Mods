@@ -114,7 +114,7 @@ namespace CardChanges
             Mod.Card(Cards.Sting).SetDamage(25);
 
             var CycleofLife = Mod.Card(Cards.CycleofLife);
-            CycleofLife.GetEffect(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+            CycleofLife.GetEffect(t => t.GetEffectStateName() == nameof(CardEffectAddStatusEffect))
                        .GetParamStatusEffects()
                        .Single(t => t.statusId == StatusEffect.Spikes.GetID()).count = 12;
             CycleofLife.GetEffect(t => !(t.GetParamCardUpgradeData() is null))
@@ -139,7 +139,7 @@ namespace CardChanges
             Coldchannel2.Data.GetCharacterTriggerUpgrades()
                              .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnHit)
                              .GetEffects()
-                             .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                             .Single(t => t.GetEffectStateName() == nameof(CardEffectAddStatusEffect))
                              .GetParamStatusEffects()
                              .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 2;
 
@@ -148,7 +148,7 @@ namespace CardChanges
             Coldchannel3.Data.GetCharacterTriggerUpgrades()
                              .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnHit)
                              .GetEffects()
-                             .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                             .Single(t => t.GetEffectStateName() == nameof(CardEffectAddStatusEffect))
                              .GetParamStatusEffects()
                              .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 4;
 
@@ -157,7 +157,7 @@ namespace CardChanges
             Direchannel1.Data.GetCharacterTriggerUpgrades()
                              .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnTurnBegin)
                              .GetEffects()
-                             .Single(t => t.GetEffectStateName() == typeof(CardEffectDamage).Name)
+                             .Single(t => t.GetEffectStateName() == nameof(CardEffectDamage))
                              .Field("paramInt").SetValue(8);
 
             var Direchannel2 = Mod.Upgrade(Upgrades.Direchannel2);
@@ -165,7 +165,7 @@ namespace CardChanges
             Direchannel2.Data.GetCharacterTriggerUpgrades()
                              .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnTurnBegin)
                              .GetEffects()
-                             .Single(t => t.GetEffectStateName() == typeof(CardEffectDamage).Name)
+                             .Single(t => t.GetEffectStateName() == nameof(CardEffectDamage))
                              .Field("paramInt").SetValue(16);
 
             var Direchannel3 = Mod.Upgrade(Upgrades.Direchannel3);
@@ -173,7 +173,7 @@ namespace CardChanges
             Direchannel3.Data.GetCharacterTriggerUpgrades()
                              .Single(t => t.GetTrigger() == CharacterTriggerData.Trigger.OnTurnBegin)
                              .GetEffects()
-                             .Single(t => t.GetEffectStateName() == typeof(CardEffectDamage).Name)
+                             .Single(t => t.GetEffectStateName() == nameof(CardEffectDamage))
                              .Field("paramInt").SetValue(32);
 
             var Titanchannel1 = Mod.Upgrade(Upgrades.Titanchannel1);
@@ -217,7 +217,7 @@ namespace CardChanges
             GuardoftheUnnamed.Monster.AddStartingStatusEffects(StatusEffect.Armor.Stack(20));
             GuardoftheUnnamed.Monster.GetTrigger(CharacterTriggerData.Trigger.CardSpellPlayed)
                                      .GetEffects()
-                                     .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                                     .Single(t => t.GetEffectStateName() == nameof(CardEffectAddStatusEffect))
                                      .GetParamStatusEffects()
                                      .Single(t => t.statusId == StatusEffect.Armor.GetID()).count = 5;
 
@@ -227,21 +227,21 @@ namespace CardChanges
             TitanSentry.Monster.AddStartingStatusEffects(StatusEffect.Armor.Stack(20));
             TitanSentry.Monster.GetTrigger(CharacterTriggerData.Trigger.OnHit)
                                .GetEffects()
-                               .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                               .Single(t => t.GetEffectStateName() == nameof(CardEffectAddStatusEffect))
                                .GetParamStatusEffects()
                                .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 10;
 
             var GlacialSeal = Mod.Card(Cards.GlacialSeal);
             GlacialSeal.Monster.GetTrigger(CharacterTriggerData.Trigger.CardSpellPlayed)
                                .GetEffects()
-                               .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                               .Single(t => t.GetEffectStateName() == nameof(CardEffectAddStatusEffect))
                                .GetParamStatusEffects()
                                .Single(t => t.statusId == StatusEffect.Frostbite.GetID()).count = 3;
 
             var GuardianStone = Mod.Card(Cards.GuardianStone);
             GuardianStone.Monster.GetTrigger(CharacterTriggerData.Trigger.CardSpellPlayed)
                                  .GetEffects()
-                                 .Single(t => t.GetEffectStateName() == typeof(CardEffectAddStatusEffect).Name)
+                                 .Single(t => t.GetEffectStateName() == nameof(CardEffectAddStatusEffect))
                                  .GetParamStatusEffects()
                                  .Single(t => t.statusId == StatusEffect.Armor.GetID()).count = 3;
 
@@ -289,10 +289,7 @@ namespace CardChanges
             Mod.Card(Cards.Overgorger).Monster.SetHP(50);
 
             var Shadowsiege = Mod.Card(Cards.Shadowsiege);
-            Shadowsiege.SetCost(0);
-            Shadowsiege.Monster.SetDamage(180);
-            Shadowsiege.Monster.SetHP(180);
-            Shadowsiege.Monster.AddStartingStatusEffects(StatusEffect.Trample.Stack(), StatusEffect.Emberdrain.Stack(3));
+            Shadowsiege.SetCost(3);
         });
 
         public static Task MeltingRemnant = new Task(() =>
