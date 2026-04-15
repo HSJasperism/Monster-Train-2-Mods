@@ -10,7 +10,7 @@ namespace ThreeChoices
     {
         public const string GUID = "com.mod.threechoices";
         public const string NAME = "Three Choices";
-        public const string VERSION = "0.0.1";
+        public const string VERSION = "1.0.0";
 
         public void Awake()
         {
