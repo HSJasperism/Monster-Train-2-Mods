@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
 using HarmonyLib;
 using System.Threading.Tasks;
 
@@ -24,19 +25,26 @@ namespace CardChanges
     {
         public static async void Postfix()
         {
-            Mod.ValidateData();
-            var Tasks = new[]
+            try
             {
-                Patches.LunaCoven,
-                Patches.Underlegion,
-                Patches.Hellhorned,
-                Patches.Awoken,
-                Patches.StygianGuard,
-                Patches.Umbra,
-                Patches.MeltingRemnant
-            };
-            foreach (var task in Tasks) task.Start();
-            await Task.WhenAll(Tasks);
+                Mod.ValidateData();
+                var Tasks = new[]
+                {
+                    Patches.LunaCoven,
+                    Patches.Underlegion,
+                    Patches.Hellhorned,
+                    Patches.Awoken,
+                    Patches.StygianGuard,
+                    Patches.Umbra,
+                    Patches.MeltingRemnant
+                };
+                foreach (var task in Tasks) task.Start();
+                await Task.WhenAll(Tasks);
+            }
+            catch (Exception e)
+            {
+                Logging.LogError(e);
+            }
         }
     }
 }

@@ -29,18 +29,12 @@ namespace ThreeChoices
 
         public static void UpdateBanner(this DraftRewardData target)
         {
-            if ((uint)DraftTool.GetValue(target) == changeFrom)
-            {
-                DraftTool.SetValue(target, changeTo);
-            }
+            if ((uint)DraftTool.GetValue(target) == changeFrom) DraftTool.SetValue(target, changeTo);
         }
 
         public static void UpdateHerzalHoard(this RelicDraftRewardData target)
         {
-            if ((uint)RelicTool.GetValue(target) == changeFrom)
-            {
-                RelicTool.SetValue(target, changeTo);
-            }
+            if ((uint)RelicTool.GetValue(target) == changeFrom) RelicTool.SetValue(target, changeTo);
         }
     }
 

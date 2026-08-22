@@ -120,7 +120,7 @@ namespace CardChanges
             CycleofLife.GetEffect(t => !(t.GetParamCardUpgradeData() is null))
                        .GetParamCardUpgradeData()
                        .ToModGameData()
-                       .SetBonusHP(12);
+                       .SetBonusHP(24);
         });
 
         public static Task StygianGuard = new Task(() =>
@@ -255,6 +255,7 @@ namespace CardChanges
 
             Mod.Card(Cards.FrozenLance).AddTraits(CardTrait.Attuned.Instance());
             Mod.Card(Cards.Titanstooth).AddTraits(CardTrait.Attuned.Instance());
+            Mod.Card(Cards.AncientSynergy).AddTraits(CardTrait.Attuned.Instance());
         });
 
         public static Task Umbra = new Task(() =>
@@ -287,9 +288,7 @@ namespace CardChanges
                               .SetBonusHP(9);
 
             Mod.Card(Cards.Overgorger).Monster.SetHP(50);
-
-            var Shadowsiege = Mod.Card(Cards.Shadowsiege);
-            Shadowsiege.SetCost(3);
+            Mod.Card(Cards.Shadowsiege).SetCost(3);
         });
 
         public static Task MeltingRemnant = new Task(() =>
