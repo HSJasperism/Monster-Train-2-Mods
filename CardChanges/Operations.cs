@@ -201,19 +201,6 @@ namespace CardChanges
             }
             return this;
         }
-
-        public ModCardData SetDescription(string en,
-                                          string fr = "",
-                                          string de = "",
-                                          string ru = "",
-                                          string pt = "",
-                                          string zh = "")
-        {
-            string DescriptionKey = $"mod_card_description_{ID}";
-            ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            SetField("overrideDescriptionKey", DescriptionKey);
-            return this;
-        }
     }
 
     public class ModCharacterData : ModGameData<CharacterData>
@@ -241,7 +228,7 @@ namespace CardChanges
 
         public ModCharacterData AddStartingStatusEffects(params StatusEffectStackData[] AddedStatuses)
         {
-            StatusEffectStackData[] StartingStatuses = Data.GetStartingStatusEffects();
+            var StartingStatuses = Data.GetStartingStatusEffects();
             if (StartingStatuses.IsNullOrEmpty()) SetField("startingStatusEffects", AddedStatuses);
             else
             {
@@ -250,20 +237,6 @@ namespace CardChanges
                 StatusList.AddRange(AddedStatuses);
                 SetField("startingStatusEffects", StatusList.ToArray());
             }
-            return this;
-        }
-
-        public ModCharacterData SetTriggerDescription(CharacterTriggerData.Trigger trigger,
-                                                      string en,
-                                                      string fr = "",
-                                                      string de = "",
-                                                      string ru = "",
-                                                      string pt = "",
-                                                      string zh = "")
-        {
-            string DescriptionKey = $"mod_unit_trigger_{ID}";
-            ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Data.GetTriggers().Single(t => t.GetTrigger() == trigger).Field("descriptionKey").SetValue(DescriptionKey);
             return this;
         }
     }
@@ -297,33 +270,6 @@ namespace CardChanges
             var currentStatusEffects = GetField<List<StatusEffectStackData>>("statusEffectUpgrades");
             if (currentStatusEffects is null) SetField("statusEffectUpgrades", data.ToList());
             else currentStatusEffects.AddRange(data);
-            return this;
-        }
-
-        public ModCardUpgradeData SetUpgradeDescription(string en,
-                                                        string fr = "",
-                                                        string de = "",
-                                                        string ru = "",
-                                                        string pt = "",
-                                                        string zh = "")
-        {
-            string DescriptionKey = $"mod_upgrade_{ID}";
-            ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            SetField("upgradeDescriptionKey", DescriptionKey);
-            return this;
-        }
-
-        public ModCardUpgradeData SetTriggerDescription(CharacterTriggerData.Trigger trigger,
-                                                        string en,
-                                                        string fr = "",
-                                                        string de = "",
-                                                        string ru = "",
-                                                        string pt = "",
-                                                        string zh = "")
-        {
-            string DescriptionKey = $"mod_upgrade_trigger_{ID}";
-            ModLocalization.AddLocalization(key: DescriptionKey, en_us: en, fr_fr: fr, de_de: de, ru_ru: ru, pt_br: pt, zh_cn: zh);
-            Data.GetCharacterTriggerUpgrades().Single(t => t.GetTrigger() == trigger).Field("descriptionKey").SetValue(DescriptionKey);
             return this;
         }
     }
