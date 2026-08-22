@@ -85,8 +85,7 @@ namespace CardChanges
         public static bool HasTrait(this CardData Card, CardTrait Trait)
         {
             if (Card.GetNumTraits() == 0) return false;
-            if (Card.GetTraits().FirstOrDefault(t => t.traitStateName == Trait.GetID()) is null) return false;
-            return true;
+            return !(Card.GetTraits().FirstOrDefault(t => t.traitStateName == Trait.GetID()) is null);
         }
 
         public static CardTraitData Instance(this CardTrait trait, int paramint = 0)
@@ -166,7 +165,7 @@ namespace CardChanges
 
         public ModCardData(CardData cardData) : base(cardData)
         {
-            if (Data is null) Logging.LogError("Couldn't find card - This will cause crashes.");
+            if (Data is null) Logging.Log("Couldn't find card - This will cause crashes.");
             else
             {
                 Type = Data.GetCardType();
@@ -207,7 +206,7 @@ namespace CardChanges
     {
         public ModCharacterData(CharacterData monsterData) : base(monsterData)
         {
-            if (Data is null) Logging.LogError("Couldn't find monster - This will cause crashes.");
+            if (Data is null) Logging.Log("Couldn't find monster - This will cause crashes.");
         }
 
         public ModCharacterData SetDamage(int newDamage)
@@ -245,7 +244,7 @@ namespace CardChanges
     {
         public ModCardUpgradeData(CardUpgradeData upgradeData) : base(upgradeData)
         {
-            if (Data is null) Logging.LogWarning("Couldn't find upgrade - This will cause crashes.");
+            if (Data is null) Logging.Log("Couldn't find upgrade - This will cause crashes.");
         }
 
         public ModCardUpgradeData SetBonusDamage(int value)

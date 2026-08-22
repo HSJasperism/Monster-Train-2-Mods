@@ -31,7 +31,14 @@ namespace CardChanges
             }
         }
 
-        public static void Log(LogLevel level, string message) => LogSource.Log(level, message);
+        public static bool DebugDisabled = false;
+
+        public static void Log(LogLevel level, string message)
+        {
+            if (DebugDisabled && level == LogLevel.Debug) return;
+            LogSource.Log(level, message);
+        }
+
         public static void Log(string message, LogLevel level = LogLevel.Debug) => Log(level, message);
         public static void Log(Exception error) => Log(LogLevel.Error, $"{error.Source}\n{error.Message}");
 
